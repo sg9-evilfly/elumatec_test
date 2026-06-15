@@ -1,0 +1,412 @@
+{
+  "techniker": [
+    "Artis Abolins",
+    "Fabian Bürisch",
+    "Gerd Weißbrich",
+    "Kai-Uwe Mühlenbruch-Hohmann",
+    "Martin Prax",
+    "Martin Spiller",
+    "Martin Striegel",
+    "Nils Hohmann",
+    "Ralf Kässig",
+    "René Kramer",
+    "Sven Kröger",
+    "Thomas Schmidt",
+    "Thomas Steeg",
+    "Tobias Pflüger",
+    "Ulrich Röpke"
+  ],
+
+  "maschinentypen": [
+    { "name": "SBZ 118",          "checkliste": "SBZ" },
+    { "name": "SBZ 122",          "checkliste": "SBZ" },
+    { "name": "SBZ 122 70er Serie","checkliste": "SBZ" },
+    { "name": "SBZ 130 / 131",    "checkliste": "SBZ_130_131" },
+    { "name": "SBZ 140 / 141",    "checkliste": "SBZ" },
+    { "name": "SBZ 145",          "checkliste": "SBZ" },
+    { "name": "SBZ 150",          "checkliste": "SBZ" },
+    { "name": "SBZ 151",          "checkliste": "SBZ" },
+    { "name": "SBZ 155",          "checkliste": "SBZ" },
+    { "name": "DG 79",            "checkliste": "DG" },
+    { "name": "DG102",            "checkliste": "DG" },
+    { "name": "DG104",            "checkliste": "DG" },
+    { "name": "DG 142",           "checkliste": "DG" },
+    { "name": "DG 244",           "checkliste": "DG" }
+  ],
+
+  "checklisten": {
+    "SBZ": [
+      {
+        "name": "Sicherheitsfunktionen",
+        "items": [
+          "CE überprüfen (Fundamentplan)",
+          "Alle Not-Aus Funktionen testen",
+          "Schutzscheibe von Haube (Risse, Durchsichtigkeit)",
+          "Trittmatten testen",
+          "Schutzzaun Türverriegelung testen und ggf. nachjustieren",
+          "Schutzzaun gem. Layout und Vorschriften vollständig und unbeschädigt",
+          "Zutrittssicherungen prüfen und reinigen (Lichtschranken, Scanner, Kameras)",
+          "Pendelfunktion überprüfen",
+          "Warn- und Hinweisschilder überprüfen"
+        ]
+      },
+      {
+        "name": "Pneumatik",
+        "items": [
+          "Wartungseinheiten auf Flüssigkeit prüfen und Filter reinigen",
+          "Ventile auf Funktion und Dichtheit prüfen",
+          "PE-Wandler prüfen (bei akutem Luftverlust)",
+          "Dichtheitsprüfung von Luftleitungen und Verschraubungen"
+        ]
+      },
+      {
+        "name": "Elektrik",
+        "items": [
+          "Hauben Schalter prüfen / einstellen",
+          "Prüfen der Verschraubungen, Zugentlastungen und Kabelhalterungen",
+          "Taster für Werkzeug spannen/lösen prüfen",
+          "Schaltschrank (keine offenen Stellen, Abdichtung, Hauptschalter i. O.)",
+          "Arbeitsraumbeleuchtung prüfen",
+          "Bedienelemente / Taster auf Funktion und Beschädigungen prüfen",
+          "Alle Funktionen des Handbedienterminals prüfen",
+          "Sichtprüfung von Kabeln und Schläuchen in den Energieketten aller Achsen"
+        ]
+      },
+      {
+        "name": "Antriebssysteme",
+        "items": [
+          "Sichtprüfung der Zahnstange und das Ritzel der X-Achse",
+          "Sichtprüfung aller Linearführungsschienen und Führungswagen",
+          "Alle Riemen überprüfen auf Risse",
+          "Sicht- und Geräuschprüfung an den Kugelumlaufspindeln der Y- und Z-Achse",
+          "Min- und Max-Positionen aller Achsen anfahren und auf Funktion überprüfen (Soft- und ggf. Hardware)"
+        ]
+      },
+      {
+        "name": "Spanner",
+        "items": [
+          "Schaltleisten Lage 1 und 2 auf Sitz (Ausrichtung) überprüfen",
+          "Alle Spanner auf Funktion testen. Druckwächter öffnen / schließen prüfen",
+          "Z- und Y-Beilagen prüfen",
+          "Endanschläge der Spannerbereiche prüfen",
+          "Maximale Verschiebewege für Spanner prüfen und mit Hand anfahren",
+          "Verschraubung, Schläuche, Zylinder und Ventile überprüfen",
+          "Funktion von Vor- und Hauptspanndruck überprüfen",
+          "Alle Klemmelemente prüfen und ggf. einstellen",
+          "Parallelität der Spanner zueinander prüfen / justieren",
+          "Spannerverschiebung prüfen – reale Position zu Software",
+          "Scansensor sowie Gegenstück / Messsystem sowie Magnete prüfen",
+          "Mechanische Prüfung von Mitnehmer und Bolzen / Abstützung und Verbindungspunkten",
+          "Reinigung des Antriebskastens sowie Überprüfung der Zahnstange / Ritzel / Kugelumlaufspindel"
+        ]
+      },
+      {
+        "name": "Kühl- und Schmiersysteme",
+        "items": [
+          "Funktionstest der Zentralschmierung sowie Überprüfen der Schmierpunkte an den Kugelumlaufspindeln",
+          "Schaltschrankühlung testen, ggf. Filtermatte austauschen",
+          "V- & Z-Achs Schmierung prüfen, ggf. Schmierpatrone prüfen (Einbau Datum und eingestellter Zeitraum)"
+        ]
+      },
+      {
+        "name": "Zubehör und Optionen",
+        "items": [
+          "Funktion des Späne-Förderbandes prüfen",
+          "Funktion der Schwadenabsaugung prüfen, Filter prüfen und ggf. wechseln / reinigen",
+          "Signallampen überprüfen (Rot, Gelb, Grün)"
+        ]
+      },
+      {
+        "name": "Spindelkühlung",
+        "items": [
+          "Zustandsprüfung der Kühlflüssigkeit und ggf. mit Reiniger befüllen (Systemlaufzeit von Reiniger beachten)",
+          "Einstellungen der Temperaturen sowie Alarme überprüfen (HAL / LAL)",
+          "Absperrhahn schließen und prüfen, ob dies über die Steuerung gemeldet wird / Alarmmeldung prüfen",
+          "Kühlgerät von innen / außen reinigen",
+          "Sichtprüfung auf Beschädigungen / Befestigungen",
+          "Funktion Ventilator / Kühleinheit",
+          "Alle Kühlmittelanschlüsse und Pumpe auf Dichtheit und festen Verschluss prüfen",
+          "Filter im Rücklauf prüfen / reinigen",
+          "Bei Luftkühlung Funktion prüfen / einstellen"
+        ]
+      },
+      {
+        "name": "Achskopf",
+        "items": [
+          "Geräuschentwicklung der Spindellagerung beurteilen",
+          "Werkzeug-Einzug: Kraft in der Spindel messen, ggf. Klammern fetten",
+          "Spindelsensoren mit Werkzeugen prüfen, nachjustieren falls möglich",
+          "Sperrluft und Werkzeuglösedruck testen / einstellen",
+          "Werkzeugsprühung testen",
+          "Steckverbindungen der Kabel und Schläuche an der Spindel prüfen",
+          "Kegel der Spindel reinigen",
+          "Anlagefläche Spindel auf Verschmutzung oder Riefen überprüfen"
+        ]
+      },
+      {
+        "name": "Werkzeugwechsler",
+        "items": [
+          "Option 2. Werkzeugwechsler: Linearführung und Zylinder prüfen und ggf. nachjustieren",
+          "Sicht- und Halteprüfung der Werkzeugklammern",
+          "Alle Werkzeugplätze anfahren und ggf. einstellen",
+          "Werkzeugwechsler-Tor / Abdeckung prüfen (Deckel, Lamellen, Führungen, Zylinder)",
+          "Sichtprüfung der Werkzeugaufnahmen",
+          "Anlagefläche Spindel auf Verschmutzung oder Riefen überprüfen",
+          "Verfahrantriebssystem des Werkzeugwechslers prüfen: Riemen, Schienen, Energieketten"
+        ]
+      },
+      {
+        "name": "Geometrie",
+        "items": [
+          "Materialanschläge überprüfen / ausrichten",
+          "Umkehrspiel aller Achsen kontrollieren / einstellen",
+          "Maschinennullpunkte in „X", „Y", „Z", „A" und „C" anfahren, überprüfen und ggf. einstellen",
+          "Probeteil bearbeiten und vermessen",
+          "Bodenbeschaffenheit (Risse, Boden gehoben / gesenkt)",
+          "Ausrichtung der Maschine prüfen",
+          "Messplatte auf Funktion und Genauigkeit überprüfen",
+          "Werkzeugvermessung prüfen"
+        ]
+      },
+      {
+        "name": "Dokumentation",
+        "items": [
+          "Schaltplan und Bedienungsanleitung vorhanden",
+          "Typenschild überprüfen",
+          "Betriebsstundenzähler und Spindellaufzeit im Servicebericht vermerken",
+          "Wartungsprotokoll erstellen und dem Servicebericht zuordnen",
+          "Ergebnisse mit Kunde besprechen",
+          "Maschinensoftware-Backup durchführen",
+          "Wartung im Wartungsheft dokumentieren (z.B. an der Innenseite des Schaltschranks)"
+        ]
+      }
+    ],
+
+    "SBZ_130_131": [
+      {
+        "name": "Sicherheitsfunktionen",
+        "items": [
+          "CE überprüfen (Fundamentplan)",
+          "Alle Not-Aus Funktionen testen",
+          "PE-Wandler prüfen (bei akutem Luftverlust)",
+          "Schutzscheibe von Haube (Risse, Durchsichtigkeit)",
+          "Trittmatten und Schaltleiste der Haube testen",
+          "Schutzzaun Türverriegelung testen und ggf. nachjustieren",
+          "Schutzzaun gem. Layout und Vorschriften vollständig und unbeschädigt",
+          "Zutrittssicherungen prüfen und reinigen (Lichtschranken, Scanner, Kameras)",
+          "Pendelfunktion überprüfen",
+          "Warn- und Hinweisschilder überprüfen"
+        ]
+      },
+      {
+        "name": "Pneumatik",
+        "items": [
+          "Wartungseinheiten auf Flüssigkeit prüfen und Filter reinigen",
+          "Ventile auf Funktion und Dichtheit prüfen",
+          "Dichtheitsprüfung von Luftleitungen und Verschraubungen"
+        ]
+      },
+      {
+        "name": "Elektrik",
+        "items": [
+          "Hauben Schalter prüfen / einstellen",
+          "Prüfen der Verschraubungen, Zugentlastungen und Kabelhalterungen",
+          "Taster für Werkzeug spannen/lösen prüfen",
+          "Schaltschrank (keine offenen Stellen, Abdichtung, Hauptschalter i. O.)",
+          "Arbeitsraumbeleuchtung prüfen",
+          "Bedienelemente / Taster auf Funktion und Beschädigungen prüfen",
+          "Alle Funktionen des Handbedienterminals prüfen",
+          "Sichtprüfung von Kabeln und Schläuchen in den Energieketten aller Achsen"
+        ]
+      },
+      {
+        "name": "Antriebssysteme",
+        "items": [
+          "Sichtprüfung der Zahnstange und das Ritzel der X-Achse",
+          "Sichtprüfung aller Linearführungsschienen und Führungswagen",
+          "Alle Riemen überprüfen auf Risse",
+          "Sicht- und Geräuschprüfung an den Kugelumlaufspindeln der Y- und Z-Achse",
+          "Min- und Max-Positionen aller Achsen anfahren und auf Funktion überprüfen (Soft- und ggf. Hardware)"
+        ]
+      },
+      {
+        "name": "Spanner",
+        "items": [
+          "Schaltleisten Lage 1 und 2 auf Sitz (Ausrichtung) überprüfen",
+          "Alle Spanner auf Funktion testen. Druckwächter öffnen / schließen prüfen",
+          "Z- und Y-Beilagen prüfen",
+          "Klemmelemente aller Spanner prüfen und ggf. einstellen",
+          "Endanschläge der Spannerbereiche prüfen",
+          "Maximale Verschiebewege für Spanner prüfen und mit Hand anfahren",
+          "Verschraubung, Schläuche, Zylinder und Ventile überprüfen",
+          "Einstellungen und Funktion von Vor- und Hauptspanndruck überprüfen",
+          "Parallelität der Spanner zueinander prüfen / justieren",
+          "Spannerverschiebung prüfen – reale Position zu Software",
+          "Scansensor sowie Gegenstück / Messsystem sowie Magnete prüfen",
+          "Mechanische Prüfung von Mitnehmer und Bolzen / Abstützung und Verbindungspunkten",
+          "Reinigung des Antriebskastens sowie Überprüfung der Zahnstange / Ritzel / Endschalter und Gegenstück"
+        ]
+      },
+      {
+        "name": "Kühl- und Schmiersysteme",
+        "items": [
+          "Funktionstest der Zentralschmierung sowie Überprüfen der Schmierpunkte an den Kugelumlaufspindeln",
+          "Schaltschrankühlung testen, ggf. Filtermatte austauschen",
+          "V- & Z-Achs Schmierung prüfen, ggf. Schmierpatrone prüfen (Einbau Datum und eingestellter Zeitraum)"
+        ]
+      },
+      {
+        "name": "Zubehör und Optionen",
+        "items": [
+          "Funktion des Späne-Förderbandes prüfen",
+          "Funktion der Schwadenabsaugung prüfen, Filter prüfen und ggf. wechseln / reinigen",
+          "Signallampen überprüfen (Rot, Gelb, Grün)"
+        ]
+      },
+      {
+        "name": "Revolverkopf",
+        "items": [
+          "Geräuschentwicklung der Spindellagerung beurteilen",
+          "Sensoren für Winkelwerkzeugen prüfen, nachjustieren falls möglich",
+          "Sperrluft im Revolver prüfen und ggf. nachstellen",
+          "Werkzeugsprühung testen",
+          "Steckverbindungen der Kabel und Schläuche an der Spindel prüfen",
+          "Antriebsriemen auf Risse überprüfen",
+          "Riemenspannung der Spindelachse überprüfen, ggf. nachstellen"
+        ]
+      },
+      {
+        "name": "Werkzeugwechsler",
+        "items": [
+          "Alle Werkzeuge einwechseln und auf festen Sitz überprüfen (WZ-Aufnahme)",
+          "Getriebeschnecke und Mitnehmer fetten"
+        ]
+      },
+      {
+        "name": "Geometrie",
+        "items": [
+          "Materialanschläge überprüfen / ausrichten",
+          "Umkehrspiel aller Achsen kontrollieren / einstellen",
+          "Maschinennullpunkte in „X", „Y", „Z" anfahren, überprüfen und ggf. einstellen",
+          "Probeteil bearbeiten und vermessen",
+          "Bodenbeschaffenheit (Risse, Boden gehoben / gesenkt)",
+          "Ausrichtung der Maschine prüfen",
+          "Messplatte auf Funktion und Genauigkeit überprüfen",
+          "Werkzeugvermessung prüfen"
+        ]
+      },
+      {
+        "name": "Dokumentation",
+        "items": [
+          "Schaltplan und Bedienungsanleitung vorhanden",
+          "Typenschild überprüfen",
+          "Betriebsstundenzähler und Spindellaufzeit im Servicebericht vermerken",
+          "Wartungsprotokoll erstellen und dem Servicebericht zuordnen",
+          "Ergebnisse mit Kunde besprechen",
+          "Maschinensoftware-Backup durchführen",
+          "Wartung im Wartungsheft dokumentieren (z.B. an der Innenseite des Schaltschranks)"
+        ]
+      }
+    ],
+
+    "DG": [
+      {
+        "name": "Sicherheitsfunktionen",
+        "items": [
+          "CE überprüfen (Fundamentplan)",
+          "Alle Not-Aus Funktionen testen",
+          "Schutzscheibe von Haube (Risse, Durchsichtigkeit)",
+          "Schutzzaun gem. Layout und Vorschriften vollständig und unbeschädigt",
+          "Zutrittssicherungen prüfen und reinigen (Lichtschranken, Scanner, Kameras)",
+          "Warn- und Hinweisschilder überprüfen"
+        ]
+      },
+      {
+        "name": "Pneumatik",
+        "items": [
+          "Wartungseinheiten auf Flüssigkeit prüfen und Filter reinigen",
+          "Ventile auf Funktion und Dichtheit prüfen",
+          "PE-Wandler prüfen (bei akutem Luftverlust)",
+          "Überprüfung aller Gasdruckfedern",
+          "Dichtheitsprüfung von Luftleitungen und Verschraubungen"
+        ]
+      },
+      {
+        "name": "Elektrik",
+        "items": [
+          "Hauben Schalter prüfen / einstellen",
+          "Prüfen der Verschraubungen, Zugentlastungen und Kabelhalterungen",
+          "Schaltschrank (keine offenen Stellen, Abdichtung, Hauptschalter i. O.)",
+          "Bedienelemente / Taster auf Funktion und Beschädigungen prüfen",
+          "Sichtprüfung von Kabeln und Schläuchen in den Energieketten aller Achsen"
+        ]
+      },
+      {
+        "name": "Antriebssysteme",
+        "items": [
+          "Sichtprüfung der Zahnstange und das Ritzel der X-Achse",
+          "Flankenspiel Zahnstange und Ritzel prüfen, ggf. austauschen",
+          "Alle Riemen überprüfen auf Risse",
+          "Sichtprüfung Führungswellen und Fahrrollen",
+          "Antrieb Sägeblatt: Riemen überprüfen auf Risse",
+          "Riemenspannung überprüfen, ggf. nachstellen",
+          "Geräuschentwicklung Lagerung",
+          "Antriebssysteme Schwenken / Neigen prüfen",
+          "Endlagenschalter bei motorischer Achse prüfen",
+          "Gebersysteme prüfen",
+          "Motoren auf festen Sitz prüfen",
+          "Min- / Max-Positionen aller Achsen (Software- und Hardware-Endlagen) anfahren und auf Funktion überprüfen"
+        ]
+      },
+      {
+        "name": "Spanner",
+        "items": [
+          "Alle Spanner auf Funktion testen. Druckwächter öffnen / schließen prüfen",
+          "Einstellungen und Funktion von Vor- und Hauptspanndruck überprüfen",
+          "Beilagen auf festen Sitz prüfen (Option)",
+          "Spannpuffer und Spanner auf Beschädigung prüfen",
+          "Verschraubung, Schläuche, Zylinder und Ventile überprüfen"
+        ]
+      },
+      {
+        "name": "Kühl- und Schmiersysteme",
+        "items": [
+          "Sprühsystem testen",
+          "Schaltschrankühlung testen, ggf. Filtermatte austauschen",
+          "Schmierstellen prüfen und ggf. abschmieren"
+        ]
+      },
+      {
+        "name": "Zubehör und Optionen",
+        "items": [
+          "Ebenheit der Rollenbahn prüfen und ggf. nachstellen",
+          "Signallampen überprüfen (Rot, Gelb, Grün)",
+          "Funktion der Schwadenabsaugung prüfen, Filter prüfen und ggf. wechseln / reinigen"
+        ]
+      },
+      {
+        "name": "Geometrie",
+        "items": [
+          "Materialanschläge überprüfen / ausrichten",
+          "Maschinennullpunkte überprüfen und ggf. einstellen",
+          "Probeteil bearbeiten und vermessen",
+          "Bodenbeschaffenheit (Risse, Boden gehoben / gesenkt)",
+          "Ausrichtung der Maschine prüfen",
+          "Werkzeugvermessung prüfen"
+        ]
+      },
+      {
+        "name": "Dokumentation",
+        "items": [
+          "Schaltplan und Bedienungsanleitung vorhanden",
+          "Typenschild überprüfen",
+          "Betriebsstundenzähler und Spindellaufzeit im Servicebericht vermerken",
+          "Wartungsprotokoll erstellen und dem Servicebericht zuordnen",
+          "Ergebnisse mit Kunde besprechen",
+          "Maschinensoftware-Backup durchführen",
+          "Wartung im Wartungsheft dokumentieren"
+        ]
+      }
+    ]
+  }
+}
