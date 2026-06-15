@@ -1,0 +1,1456 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#0f3460">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Wartungsprotokoll</title>
+<link rel="manifest" href="manifest.json">
+<style>
+  :root {
+    /* Elumatec Brand Colors */
+    --orange: #E8620A;
+    --orange-hover: #cf540a;
+    --orange-light: rgba(232,98,10,.12);
+    --dark: #1C1C1C;
+    --dark2: #2A2A2A;
+    --dark3: #383838;
+
+    /* Content area (light) */
+    --bg: #F0F2F4;
+    --surface: #FFFFFF;
+    --surface2: #E8EAED;
+    --border: #D4D7DC;
+    --text: #1C1C1C;
+    --text2: #666666;
+
+    /* Status colors */
+    --green: #2E9E52;
+    --red: #D93025;
+    --yellow: #D08500;
+    --accent: var(--orange);
+    --accent-hover: var(--orange-hover);
+
+    --radius: 8px;
+    --header-h: 56px;
+    --nav-h: 60px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; font-size: 15px; }
+
+  /* Layout */
+  #app { display: flex; flex-direction: column; height: 100vh; }
+
+  /* Dark header with orange accent */
+  header { height: var(--header-h); background: var(--dark); border-bottom: 3px solid var(--orange); display: flex; align-items: center; padding: 0 16px; gap: 12px; position: sticky; top: 0; z-index: 100; }
+  header h1 { font-size: 17px; font-weight: 700; flex: 1; color: #FFFFFF; letter-spacing: .3px; }
+  header svg { color: var(--orange); }
+  #save-btn { background: var(--orange); color: #fff; border: none; border-radius: 4px; padding: 7px 16px; font-size: 13px; font-weight: 600; cursor: pointer; letter-spacing: .3px; }
+  #save-btn:hover { background: var(--orange-hover); }
+
+  main { flex: 1; overflow-y: auto; padding-bottom: var(--nav-h); }
+
+  /* Dark bottom nav with orange active state */
+  nav { height: var(--nav-h); background: var(--dark); border-top: 2px solid var(--dark3); display: flex; position: fixed; bottom: 0; left: 0; right: 0; z-index: 100; }
+  nav button { flex: 1; background: none; border: none; color: #888; font-size: 11px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: color .2s; font-weight: 500; }
+  nav button.active { color: var(--orange); }
+  nav button svg { width: 22px; height: 22px; }
+
+  /* Pages */
+  .page { display: none; padding: 16px; }
+  .page.active { display: block; }
+
+  /* Cards */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+  .card h3 { font-size: 11px; font-weight: 700; color: var(--orange); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+
+  /* Form elements */
+  label { display: block; font-size: 13px; color: var(--text2); margin-bottom: 4px; font-weight: 500; }
+  input[type=text], input[type=date], input[type=number], select, textarea {
+    width: 100%; background: #fff; border: 1px solid var(--border); border-radius: 6px;
+    color: var(--text); padding: 9px 12px; font-size: 14px; margin-bottom: 12px;
+    -webkit-appearance: none; appearance: none;
+  }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--orange); box-shadow: 0 0 0 3px var(--orange-light); }
+  textarea { min-height: 80px; resize: vertical; }
+  select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath fill='%23666' d='M0 0l6 8 6-8z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  /* Shift model */
+  .shift-group { display: flex; gap: 8px; margin-bottom: 12px; }
+  .shift-btn { flex: 1; padding: 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text2); font-size: 13px; cursor: pointer; text-align: center; transition: all .2s; font-weight: 500; }
+  .shift-btn.selected { border-color: var(--orange); background: var(--orange-light); color: var(--orange); font-weight: 700; }
+
+  /* Checkbox toggle */
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; margin-bottom: 4px; border-bottom: 1px solid var(--surface2); }
+  .toggle-row:last-of-type { border-bottom: none; }
+  .toggle-row span { font-size: 14px; color: var(--text); }
+  .toggle { position: relative; width: 44px; height: 24px; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider { position: absolute; inset: 0; background: #ccc; border-radius: 24px; cursor: pointer; transition: .2s; }
+  .toggle-slider:before { content: ''; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: .2s; }
+  input:checked + .toggle-slider { background: var(--orange); }
+  input:checked + .toggle-slider:before { transform: translateX(20px); }
+
+  /* Checklist sections */
+  .section-header { background: var(--dark); border-radius: var(--radius); padding: 12px 16px; margin-bottom: 6px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; }
+  .section-header h2 { font-size: 13px; font-weight: 700; color: #fff; letter-spacing: .3px; }
+  .section-header .badge { font-size: 11px; color: var(--dark); background: var(--surface2); padding: 2px 8px; border-radius: 20px; font-weight: 600; }
+  .section-header.open .badge { background: var(--orange); color: #fff; }
+  .section-header .chevron { color: #888; transition: transform .2s; }
+  .section-header.open .chevron { transform: rotate(180deg); color: var(--orange); }
+  .section-body { display: none; }
+  .section-body.open { display: block; }
+
+  .check-item { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--border); border-radius: 0 6px 6px 0; padding: 12px; margin-bottom: 6px; }
+  .check-item-label { font-size: 13px; line-height: 1.5; margin-bottom: 10px; color: var(--text); font-weight: 500; }
+  .check-controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .io-btn { padding: 6px 14px; border-radius: 4px; border: 1px solid var(--border); background: var(--bg); color: var(--text2); font-size: 12px; font-weight: 600; cursor: pointer; transition: all .2s; }
+  .io-btn.io-active { border-color: var(--green); background: rgba(46,158,82,.12); color: var(--green); }
+  .io-btn.nio-active { border-color: var(--red); background: rgba(217,48,37,.12); color: var(--red); }
+  .status-sel { flex: 1; min-width: 120px; background: #fff; border: 1px solid var(--border); border-radius: 4px; color: var(--text2); padding: 5px 12px; font-size: 12px; margin-bottom: 0; }
+  .status-sel.has-val { border-color: var(--orange); color: var(--orange); font-weight: 600; }
+
+  /* checked item highlight */
+  .check-item.is-io { border-left-color: var(--green); }
+  .check-item.is-nio { border-left-color: var(--red); }
+
+  /* Hours input */
+  .hours-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+  .hours-box { background: var(--dark); border-radius: var(--radius); padding: 14px; text-align: center; }
+  .hours-box label { font-size: 11px; color: #999; margin-bottom: 6px; font-weight: 600; letter-spacing: .5px; text-transform: uppercase; }
+  .hours-box input { text-align: center; font-size: 22px; font-weight: 700; border: none; background: transparent; padding: 4px; margin-bottom: 0; color: var(--orange); }
+
+  /* Progress */
+  .progress-bar { height: 5px; background: var(--border); border-radius: 3px; margin-bottom: 4px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--orange); border-radius: 3px; transition: width .3s; }
+  .progress-text { font-size: 12px; color: var(--text2); text-align: right; margin-bottom: 14px; font-weight: 500; }
+
+  /* Reports */
+  .report-item { background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--orange); border-radius: 0 var(--radius) var(--radius) 0; padding: 14px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+  .report-item-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+  .report-item h3 { font-size: 14px; font-weight: 700; color: var(--text); }
+  .report-item .date { font-size: 12px; color: var(--text2); background: var(--surface2); padding: 2px 8px; border-radius: 4px; }
+  .report-item .meta { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .report-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .btn-sm { padding: 6px 14px; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: var(--surface2); color: var(--text); transition: all .15s; }
+  .btn-sm.primary { background: var(--orange); border-color: var(--orange); color: #fff; }
+  .btn-sm.primary:hover { background: var(--orange-hover); }
+  .btn-sm.danger { border-color: var(--red); color: var(--red); background: rgba(217,48,37,.06); }
+  .btn-sm:hover { background: var(--border); }
+
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--text2); }
+  .empty-state svg { width: 48px; height: 48px; opacity: .3; margin-bottom: 12px; color: var(--orange); }
+  .empty-state p { font-size: 14px; }
+
+  /* Remarks */
+  .remark-field { margin-top: 8px; }
+  .remark-toggle { font-size: 11px; color: var(--orange); cursor: pointer; margin-bottom: 6px; font-weight: 600; }
+  .remark-input { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); padding: 7px 10px; font-size: 12px; resize: none; min-height: 50px; display: none; margin-bottom: 0; }
+  .remark-input.show { display: block; }
+
+  /* Toast */
+  #toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--dark); color: #fff; border-left: 3px solid var(--orange); border-radius: var(--radius); padding: 10px 20px; font-size: 13px; opacity: 0; transition: all .3s; z-index: 200; white-space: nowrap; font-weight: 500; }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @media print {
+    nav, header button { display: none; }
+    body { background: white; color: black; }
+    .page { display: block !important; }
+    .check-item { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <span style="flex:1"></span>
+    <img src="./icons/elumatec_logos.svg" alt="elumatec" style="height:26px;display:block">
+    <span style="flex:1;display:flex;justify-content:flex-end">
+      <button id="save-btn" onclick="saveSession()">Speichern</button>
+    </span>
+  </header>
+
+  <main>
+    <!-- DECKBLATT -->
+    <div id="page-cover" class="page active">
+      <div class="card">
+        <h3>Maschinendaten</h3>
+        <label>Maschinentyp</label>
+        <select id="machine-type" onchange="onMachineTypeChange()">
+          <option value="">Auswählen...</option>
+          <option value="SBZ">SBZ 118</option>
+          <option value="SBZ">SBZ 122</option>
+          <option value="SBZ">SBZ 122 70er Serie</option>
+          <option value="SBZ_130_131">SBZ 130 / 131</option>
+          <option value="SBZ">SBZ 140 / 141</option>
+          <option value="SBZ">SBZ 145</option>
+          <option value="SBZ">SBZ 150</option>
+          <option value="SBZ">SBZ 151</option>
+          <option value="SBZ">SBZ 155</option>
+          <option value="DG">DG 79</option>
+          <option value="DG">DG102</option>
+          <option value="DG">DG104</option>
+          <option value="DG">DG 142</option>
+          <option value="DG">DG 244</option>
+        </select>
+        <div class="form-row">
+          <div>
+            <label>Maschinennummer</label>
+            <input type="text" id="machine-nr" placeholder="z.B. 12345">
+          </div>
+          <div>
+            <label>Baujahr</label>
+            <input type="text" id="baujahr" placeholder="z.B. 2018">
+          </div>
+        </div>
+        <div class="form-row">
+          <div>
+            <label>Datum</label>
+            <input type="date" id="datum">
+          </div>
+          <div>
+            <label>Techniker</label>
+            <select id="techniker">
+              <option value="">Auswählen...</option>
+              <option>Artis Abolins</option>
+              <option>Fabian Bürisch</option>
+              <option>Gerd Weißbrich</option>
+              <option>Kai-Uwe Mühlenbruch-Hohmann</option>
+              <option>Martin Prax</option>
+              <option>Martin Spiller</option>
+              <option>Martin Striegel</option>
+              <option>Nils Hohmann</option>
+              <option>Ralf Kässig</option>
+              <option>René Kramer</option>
+              <option>Sven Kröger</option>
+              <option>Thomas Schmidt</option>
+              <option>Thomas Steeg</option>
+              <option>Tobias Pflüger</option>
+              <option>Ulrich Röpke</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Schichtmodell</h3>
+        <div class="shift-group">
+          <button class="shift-btn" onclick="selectShift(this,'1-Schicht')">1-Schicht</button>
+          <button class="shift-btn" onclick="selectShift(this,'2-Schicht')">2-Schicht</button>
+          <button class="shift-btn" onclick="selectShift(this,'3-Schicht')">3-Schicht</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Allgemeine Informationen</h3>
+        <div class="toggle-row">
+          <span>Betriebsbedingungen nicht vertragsgemäß</span>
+          <label class="toggle"><input type="checkbox" id="bedingungen" onchange="toggleField('bedingungen-detail')"><span class="toggle-slider"></span></label>
+        </div>
+        <textarea id="bedingungen-detail" placeholder="Art der Veränderung..." style="display:none"></textarea>
+
+        <div class="toggle-row">
+          <span>Zugänglichkeit sichergestellt</span>
+          <label class="toggle"><input type="checkbox" id="zugaenglichkeit" checked><span class="toggle-slider"></span></label>
+        </div>
+
+        <div class="toggle-row">
+          <span>Verzögerung aufgetreten</span>
+          <label class="toggle"><input type="checkbox" id="verzoegerung" onchange="toggleField('verzoegerung-detail')"><span class="toggle-slider"></span></label>
+        </div>
+        <select id="verzoegerung-detail" style="display:none">
+          <option value="">Grund wählen...</option>
+          <option>Zugang nicht frei</option>
+          <option>Produktion läuft</option>
+          <option>Maschine nicht gereinigt</option>
+          <option>Sonstiges</option>
+        </select>
+
+        <label>Zusätzliche Bemerkungen</label>
+        <textarea id="bemerkungen" placeholder="Sonstiges / Servicebericht..."></textarea>
+      </div>
+    </div>
+
+    <!-- CHECKLISTE -->
+    <div id="page-check" class="page">
+      <div id="check-header"></div>
+      <div id="checklist-container"></div>
+    </div>
+
+    <!-- BERICHTE -->
+    <div id="page-reports" class="page">
+      <div style="margin-bottom:16px;font-size:14px;font-weight:600">Gespeicherte Berichte</div>
+      <div id="reports-list"></div>
+    </div>
+
+    <!-- EINSTELLUNGEN -->
+    <div id="page-settings" class="page">
+      <div class="card">
+        <h3>NAS / Server Adresse</h3>
+        <label>URL zur config.json auf deinem NAS</label>
+        <input type="text" id="nas-url" placeholder="http://192.168.1.100/wartung/config.json">
+        <div style="font-size:12px;color:var(--text2);margin-top:-8px;margin-bottom:12px">
+          Einmal eintragen — App holt Updates automatisch wenn NAS erreichbar ist.
+        </div>
+        <button id="nas-save-btn" onclick="saveNasUrl()">Speichern &amp; jetzt aktualisieren</button>
+      </div>
+      <div class="card">
+        <h3>Config Status</h3>
+        <div id="config-status" style="font-size:13px;color:var(--text2)">—</div>
+      </div>
+    </div>
+  </main>
+
+  <nav>
+    <button class="active" onclick="showPage('cover',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Deckblatt
+    </button>
+    <button onclick="showPage('check',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+      Checkliste
+    </button>
+    <button onclick="showPage('reports',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      Berichte
+    </button>
+    <button onclick="showPage('settings',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      Einstellungen
+    </button>
+  </nav>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ─── Data ───────────────────────────────────────────────────────────────────
+const CHECKLISTS = {
+  SBZ: [
+    {
+      name: 'Sicherheitsfunktionen',
+      items: [
+        'CE überprüfen (Fundamentplan)',
+        'Alle Not-Aus Funktionen testen',
+        'Schutzscheibe von Haube (Risse, Durchsichtigkeit)',
+        'Trittmatten testen',
+        'Schutzzaun Türverriegelung testen und ggf. nachjustieren',
+        'Schutzzaun gem. Layout und Vorschriften vollständig und unbeschädigt',
+        'Zutrittssicherungen prüfen und reinigen (Lichtschranken, Scanner, Kameras)',
+        'Pendelfunktion überprüfen',
+        'Warn- und Hinweisschilder überprüfen',
+      ]
+    },
+    {
+      name: 'Pneumatik',
+      items: [
+        'Wartungseinheiten auf Flüssigkeit prüfen und Filter reinigen',
+        'Ventile auf Funktion und Dichtheit prüfen',
+        'PE-Wandler prüfen (bei akutem Luftverlust)',
+        'Dichtheitspr­üfung von Luftleitungen und Verschraubungen',
+      ]
+    },
+    {
+      name: 'Elektrik',
+      items: [
+        'Hauben Schalter prüfen / einstellen',
+        'Prüfen der Verschraubungen, Zugentlastungen und Kabelhalterungen',
+        'Taster für Werkzeug spannen/lösen prüfen',
+        'Schaltschrank (keine offenen Stellen, Abdichtung, Hauptschalter i. O.)',
+        'Arbeitsraumbeleuchtung prüfen',
+        'Bedienelemente / Taster auf Funktion und Beschädigungen prüfen',
+        'Alle Funktionen des Handbedienterminals prüfen',
+        'Sichtprüfung von Kabeln und Schläuchen in den Energieketten aller Achsen',
+      ]
+    },
+    {
+      name: 'Antriebssysteme',
+      items: [
+        'Sichtprüfung der Zahnstange und das Ritzel der X-Achse',
+        'Sichtprüfung aller Linearführungsschienen und Führungswagen',
+        'Alle Riemen überprüfen auf Risse',
+        'Sicht- und Geräuschprüfung an den Kugelumlaufspindeln der Y- und Z-Achse',
+        'Min- und Max-Positionen aller Achsen anfahren und auf Funktion überprüfen (Soft- und ggf. Hardware)',
+      ]
+    },
+    {
+      name: 'Spanner',
+      items: [
+        'Schaltleisten Lage 1 und 2 auf Sitz (Ausrichtung) überprüfen',
+        'Alle Spanner auf Funktion testen. Druckwächter öffnen / schließen prüfen',
+        'Z- und Y-Beilagen prüfen',
+        'Endanschläge der Spannerbereiche prüfen',
+        'Maximale Verschiebewege für Spanner prüfen und mit Hand anfahren',
+        'Verschraubung, Schläuche, Zylinder und Ventile überprüfen',
+        'Funktion von Vor- und Hauptspanndruck überprüfen',
+        'Alle Klemmelemente prüfen und ggf. einstellen',
+        'Parallelität der Spanner zueinander prüfen / justieren',
+        'Spannerverschiebung prüfen – reale Position zu Software',
+        'Scansensor sowie Gegenstück / Messsystem sowie Magnete prüfen',
+        'Mechanische Prüfung von Mitnehmer und Bolzen / Abstützung und Verbindungspunkten',
+        'Reinigung des Antriebskastens sowie Überprüfung der Zahnstange / Ritzel / Kugelumlaufspindel',
+      ]
+    },
+    {
+      name: 'Kühl- und Schmiersysteme',
+      items: [
+        'Funktionstest der Zentralschmierung sowie Überprüfen der Schmierpunkte an den Kugelumlaufspindeln',
+        'Schaltschrankühlung testen, ggf. Filtermatte austauschen',
+        'V- & Z-Achs Schmierung prüfen, ggf. Schmierpatrone prüfen (Einbau Datum und eingestellter Zeitraum)',
+      ]
+    },
+    {
+      name: 'Zubehör und Optionen',
+      items: [
+        'Funktion des Späne-Förderbandes prüfen',
+        'Funktion der Schwadenabsaugung prüfen, Filter prüfen und ggf. wechseln / reinigen',
+        'Signallampen überprüfen (Rot, Gelb, Grün)',
+      ]
+    },
+    {
+      name: 'Spindelkühlung',
+      items: [
+        'Zustandsprüfung der Kühlflüssigkeit und ggf. mit Reiniger befüllen (Systemlaufzeit von Reiniger beachten)',
+        'Einstellungen der Temperaturen sowie Alarme überprüfen (HAL / LAL)',
+        'Absperrhahn schließen und prüfen, ob dies über die Steuerung gemeldet wird / Alarmmeldung prüfen',
+        'Kühlgerät von innen / außen reinigen',
+        'Sichtprüfung auf Beschädigungen / Befestigungen',
+        'Funktion Ventilator / Kühleinheit',
+        'Alle Kühlmittelanschlüsse und Pumpe auf Dichtheit und festen Verschluss prüfen',
+        'Filter im Rücklauf prüfen / reinigen',
+        'Bei Luftkühlung Funktion prüfen / einstellen',
+      ]
+    },
+    {
+      name: 'Achskopf',
+      items: [
+        'Geräuschentwicklung der Spindellagerung beurteilen',
+        'Werkzeug-Einzug: Kraft in der Spindel messen, ggf. Klammern fetten',
+        'Spindelsensoren mit Werkzeugen prüfen, nachjustieren falls möglich',
+        'Sperrluft und Werkzeuglösedruck testen / einstellen',
+        'Werkzeugsprühung testen',
+        'Steckverbindungen der Kabel und Schläuche an der Spindel prüfen',
+        'Kegel der Spindel reinigen',
+        'Anlagefläche Spindel auf Verschmutzung oder Riefen überprüfen',
+      ]
+    },
+    {
+      name: 'Werkzeugwechsler',
+      items: [
+        'Option 2. Werkzeugwechsler: Linearführung und Zylinder prüfen und ggf. nachjustieren',
+        'Sicht- und Halteprüfung der Werkzeugklammern',
+        'Alle Werkzeugplätze anfahren und ggf. einstellen',
+        'Werkzeugwechsler-Tor / Abdeckung prüfen (Deckel, Lamellen, Führungen, Zylinder)',
+        'Sichtprüfung der Werkzeugaufnahmen',
+        'Anlagefläche Spindel auf Verschmutzung oder Riefen überprüfen',
+        'Verfahrantriebssystem des Werkzeugwechslers prüfen: Riemen, Schienen, Energieketten',
+      ]
+    },
+    {
+      name: 'Geometrie',
+      items: [
+        'Materialanschläge überprüfen / ausrichten',
+        'Umkehrspiel aller Achsen kontrollieren / einstellen',
+        'Maschinennullpunkte in „X", „Y", „Z", „A" und „C" anfahren, überprüfen und ggf. einstellen',
+        'Probeteil bearbeiten und vermessen',
+        'Bodenbeschaffenheit (Risse, Boden gehoben / gesenkt)',
+        'Ausrichtung der Maschine prüfen',
+        'Messplatte auf Funktion und Genauigkeit überprüfen',
+        'Werkzeugvermessung prüfen',
+      ]
+    },
+    {
+      name: 'Dokumentation',
+      items: [
+        'Schaltplan und Bedienungsanleitung vorhanden',
+        'Typenschild überprüfen',
+        'Betriebsstundenzähler und Spindellaufzeit im Servicebericht vermerken',
+        'Wartungsprotokoll erstellen und dem Servicebericht zuordnen',
+        'Ergebnisse mit Kunde besprechen',
+        'Maschinensoftware-Backup durchführen',
+        'Wartung im Wartungsheft dokumentieren (z.B. an der Innenseite des Schaltschranks)',
+      ]
+    },
+  ],
+
+  SBZ_130_131: [
+    {
+      name: 'Sicherheitsfunktionen',
+      items: [
+        'CE überprüfen (Fundamentplan)',
+        'Alle Not-Aus Funktionen testen',
+        'PE-Wandler prüfen (bei akutem Luftverlust)',
+        'Schutzscheibe von Haube (Risse, Durchsichtigkeit)',
+        'Trittmatten und Schaltleiste der Haube testen',
+        'Schutzzaun Türverriegelung testen und ggf. nachjustieren',
+        'Schutzzaun gem. Layout und Vorschriften vollständig und unbeschädigt',
+        'Zutrittssicherungen prüfen und reinigen (Lichtschranken, Scanner, Kameras)',
+        'Pendelfunktion überprüfen',
+        'Warn- und Hinweisschilder überprüfen',
+      ]
+    },
+    {
+      name: 'Pneumatik',
+      items: [
+        'Wartungseinheiten auf Flüssigkeit prüfen und Filter reinigen',
+        'Ventile auf Funktion und Dichtheit prüfen',
+        'Dichtheitspr­üfung von Luftleitungen und Verschraubungen',
+      ]
+    },
+    {
+      name: 'Elektrik',
+      items: [
+        'Hauben Schalter prüfen / einstellen',
+        'Prüfen der Verschraubungen, Zugentlastungen und Kabelhalterungen',
+        'Taster für Werkzeug spannen/lösen prüfen',
+        'Schaltschrank (keine offenen Stellen, Abdichtung, Hauptschalter i. O.)',
+        'Arbeitsraumbeleuchtung prüfen',
+        'Bedienelemente / Taster auf Funktion und Beschädigungen prüfen',
+        'Alle Funktionen des Handbedienterminals prüfen',
+        'Sichtprüfung von Kabeln und Schläuchen in den Energieketten aller Achsen',
+      ]
+    },
+    {
+      name: 'Antriebssysteme',
+      items: [
+        'Sichtprüfung der Zahnstange und das Ritzel der X-Achse',
+        'Sichtprüfung aller Linearführungsschienen und Führungswagen',
+        'Alle Riemen überprüfen auf Risse',
+        'Sicht- und Geräuschprüfung an den Kugelumlaufspindeln der Y- und Z-Achse',
+        'Min- und Max-Positionen aller Achsen anfahren und auf Funktion überprüfen (Soft- und ggf. Hardware)',
+      ]
+    },
+    {
+      name: 'Spanner',
+      items: [
+        'Schaltleisten Lage 1 und 2 auf Sitz (Ausrichtung) überprüfen',
+        'Alle Spanner auf Funktion testen. Druckwächter öffnen / schließen prüfen',
+        'Z- und Y-Beilagen prüfen',
+        'Klemmelemente aller Spanner prüfen und ggf. einstellen',
+        'Endanschläge der Spannerbereiche prüfen',
+        'Maximale Verschiebewege für Spanner prüfen und mit Hand anfahren',
+        'Verschraubung, Schläuche, Zylinder und Ventile überprüfen',
+        'Einstellungen und Funktion von Vor- und Hauptspanndruck überprüfen',
+        'Parallelität der Spanner zueinander prüfen / justieren',
+        'Spannerverschiebung prüfen – reale Position zu Software',
+        'Scansensor sowie Gegenstück / Messsystem sowie Magnete prüfen',
+        'Mechanische Prüfung von Mitnehmer und Bolzen / Abstützung und Verbindungspunkten',
+        'Reinigung des Antriebskastens sowie Überprüfung der Zahnstange / Ritzel / Endschalter und Gegenstück',
+      ]
+    },
+    {
+      name: 'Kühl- und Schmiersysteme',
+      items: [
+        'Funktionstest der Zentralschmierung sowie Überprüfen der Schmierpunkte an den Kugelumlaufspindeln',
+        'Schaltschrankühlung testen, ggf. Filtermatte austauschen',
+        'V- & Z-Achs Schmierung prüfen, ggf. Schmierpatrone prüfen (Einbau Datum und eingestellter Zeitraum)',
+      ]
+    },
+    {
+      name: 'Zubehör und Optionen',
+      items: [
+        'Funktion des Späne-Förderbandes prüfen',
+        'Funktion der Schwadenabsaugung prüfen, Filter prüfen und ggf. wechseln / reinigen',
+        'Signallampen überprüfen (Rot, Gelb, Grün)',
+      ]
+    },
+    {
+      name: 'Revolverkopf',
+      items: [
+        'Geräuschentwicklung der Spindellagerung beurteilen',
+        'Sensoren für Winkelwerkzeugen prüfen, nachjustieren falls möglich',
+        'Sperrluft im Revolver prüfen und ggf. nachstellen',
+        'Werkzeugsprühung testen',
+        'Steckverbindungen der Kabel und Schläuche an der Spindel prüfen',
+        'Antriebsriemen auf Risse überprüfen',
+        'Riemenspannung der Spindelachse überprüfen, ggf. nachstellen',
+      ]
+    },
+    {
+      name: 'Werkzeugwechsler',
+      items: [
+        'Alle Werkzeuge einwechseln und auf festen Sitz überprüfen (WZ-Aufnahme)',
+        'Getriebeschnecke und Mitnehmer fetten',
+      ]
+    },
+    {
+      name: 'Geometrie',
+      items: [
+        'Materialanschläge überprüfen / ausrichten',
+        'Umkehrspiel aller Achsen kontrollieren / einstellen',
+        'Maschinennullpunkte in „X", „Y", „Z" anfahren, überprüfen und ggf. einstellen',
+        'Probeteil bearbeiten und vermessen',
+        'Bodenbeschaffenheit (Risse, Boden gehoben / gesenkt)',
+        'Ausrichtung der Maschine prüfen',
+        'Messplatte auf Funktion und Genauigkeit überprüfen',
+        'Werkzeugvermessung prüfen',
+      ]
+    },
+    {
+      name: 'Dokumentation',
+      items: [
+        'Schaltplan und Bedienungsanleitung vorhanden',
+        'Typenschild überprüfen',
+        'Betriebsstundenzähler und Spindellaufzeit im Servicebericht vermerken',
+        'Wartungsprotokoll erstellen und dem Servicebericht zuordnen',
+        'Ergebnisse mit Kunde besprechen',
+        'Maschinensoftware-Backup durchführen',
+        'Wartung im Wartungsheft dokumentieren (z.B. an der Innenseite des Schaltschranks)',
+      ]
+    },
+  ],
+
+  DG: [
+    {
+      name: 'Sicherheitsfunktionen',
+      items: [
+        'CE überprüfen (Fundamentplan)',
+        'Alle Not-Aus Funktionen testen',
+        'Schutzscheibe von Haube (Risse, Durchsichtigkeit)',
+        'Schutzzaun gem. Layout und Vorschriften vollständig und unbeschädigt',
+        'Zutrittssicherungen prüfen und reinigen (Lichtschranken, Scanner, Kameras)',
+        'Warn- und Hinweisschilder überprüfen',
+      ]
+    },
+    {
+      name: 'Pneumatik',
+      items: [
+        'Wartungseinheiten auf Flüssigkeit prüfen und Filter reinigen',
+        'Ventile auf Funktion und Dichtheit prüfen',
+        'PE-Wandler prüfen (bei akutem Luftverlust)',
+        'Überprüfung aller Gasdruckfedern',
+        'Dichtheitspr­üfung von Luftleitungen und Verschraubungen',
+      ]
+    },
+    {
+      name: 'Elektrik',
+      items: [
+        'Hauben Schalter prüfen / einstellen',
+        'Prüfen der Verschraubungen, Zugentlastungen und Kabelhalterungen',
+        'Schaltschrank (keine offenen Stellen, Abdichtung, Hauptschalter i. O.)',
+        'Bedienelemente / Taster auf Funktion und Beschädigungen prüfen',
+        'Sichtprüfung von Kabeln und Schläuchen in den Energieketten aller Achsen',
+      ]
+    },
+    {
+      name: 'Antriebssysteme',
+      items: [
+        'Sichtprüfung der Zahnstange und das Ritzel der X-Achse',
+        'Flankenspiel Zahnstange und Ritzel prüfen, ggf. austauschen',
+        'Alle Riemen überprüfen auf Risse',
+        'Sichtprüfung Führungswellen und Fahrrollen',
+        'Antrieb Sägeblatt: Riemen überprüfen auf Risse',
+        'Riemenspannung überprüfen, ggf. nachstellen',
+        'Geräuschentwicklung Lagerung',
+        'Antriebssysteme Schwenken / Neigen prüfen',
+        'Endlagenschalter bei motorischer Achse prüfen',
+        'Gebersysteme prüfen',
+        'Motoren auf festen Sitz prüfen',
+        'Min- / Max-Positionen aller Achsen (Software- und Hardware-Endlagen) anfahren und auf Funktion überprüfen',
+      ]
+    },
+    {
+      name: 'Spanner',
+      items: [
+        'Alle Spanner auf Funktion testen. Druckwächter öffnen / schließen prüfen',
+        'Einstellungen und Funktion von Vor- und Hauptspanndruck überprüfen',
+        'Beilagen auf festen Sitz prüfen (Option)',
+        'Spannpuffer und Spanner auf Beschädigung prüfen',
+        'Verschraubung, Schläuche, Zylinder und Ventile überprüfen',
+      ]
+    },
+    {
+      name: 'Kühl- und Schmiersysteme',
+      items: [
+        'Sprühsystem testen',
+        'Schaltschrankühlung testen, ggf. Filtermatte austauschen',
+        'Schmierstellen prüfen und ggf. abschmieren',
+      ]
+    },
+    {
+      name: 'Zubehör und Optionen',
+      items: [
+        'Ebenheit der Rollenbahn prüfen und ggf. nachstellen',
+        'Signallampen überprüfen (Rot, Gelb, Grün)',
+        'Funktion der Schwadenabsaugung prüfen, Filter prüfen und ggf. wechseln / reinigen',
+      ]
+    },
+    {
+      name: 'Geometrie',
+      items: [
+        'Materialanschläge überprüfen / ausrichten',
+        'Maschinennullpunkte überprüfen und ggf. einstellen',
+        'Probeteil bearbeiten und vermessen',
+        'Bodenbeschaffenheit (Risse, Boden gehoben / gesenkt)',
+        'Ausrichtung der Maschine prüfen',
+        'Werkzeugvermessung prüfen',
+      ]
+    },
+    {
+      name: 'Dokumentation',
+      items: [
+        'Schaltplan und Bedienungsanleitung vorhanden',
+        'Typenschild überprüfen',
+        'Betriebsstundenzähler und Spindellaufzeit im Servicebericht vermerken',
+        'Wartungsprotokoll erstellen und dem Servicebericht zuordnen',
+        'Ergebnisse mit Kunde besprechen',
+        'Maschinensoftware-Backup durchführen',
+        'Wartung im Wartungsheft dokumentieren',
+      ]
+    },
+  ],
+};
+
+const STATUS_OPTIONS = ['', 'geprüft', 'gereinigt', 'justiert', 'Hinweis', 'defekt', 'fehlt', 'entfällt'];
+
+// ─── State ───────────────────────────────────────────────────────────────────
+let state = {
+  checkData: {},    // { 'SectionName:itemIndex': { io: bool, nio: bool, status: string, remark: string } }
+  betriebsStunden: '',
+  spindelStunden: '',
+};
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('datum').value = new Date().toISOString().split('T')[0];
+
+  // NAS-URL aus localStorage lesen und Einstellungsfeld befüllen
+  const DEFAULT_URL = 'https://raw.githubusercontent.com/sg9-evilfly/elumatec_test/refs/heads/main/config.json';
+  const savedNasUrl = localStorage.getItem('nas-url') || DEFAULT_URL;
+  if (!localStorage.getItem('nas-url')) localStorage.setItem('nas-url', DEFAULT_URL);
+  document.getElementById('nas-url').value = savedNasUrl;
+
+  const cachedCfg = localStorage.getItem('cached-config');
+
+  function finishInit() {
+    buildChecklist();
+    renderReports();
+    updateConfigStatus();
+  }
+
+  if (savedNasUrl) {
+    // Versuche Config von NAS zu holen (timeout nach 4 Sek.)
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 4000);
+
+    fetch(savedNasUrl + '?v=' + Date.now(), { signal: controller.signal })
+      .then(r => { clearTimeout(timer); return r.json(); })
+      .then(cfg => {
+        localStorage.setItem('cached-config', JSON.stringify(cfg));
+        localStorage.setItem('cached-config-ts', new Date().toISOString());
+        applyConfig(cfg);
+        toast('Config aktualisiert ✓');
+      })
+      .catch(() => {
+        // Offline oder NAS nicht erreichbar → gecachten Config nutzen
+        if (cachedCfg) {
+          try { applyConfig(JSON.parse(cachedCfg)); } catch(e) {}
+        }
+      })
+      .finally(finishInit);
+  } else {
+    // Keine NAS-URL gespeichert → gecachten oder eingebauten Config nutzen
+    if (cachedCfg) {
+      try { applyConfig(JSON.parse(cachedCfg)); } catch(e) {}
+    }
+    finishInit();
+  }
+});
+
+function applyConfig(cfg) {
+  if (cfg.techniker && cfg.techniker.length) {
+    const sel = document.getElementById('techniker');
+    sel.innerHTML = '<option value="">Auswählen...</option>';
+    cfg.techniker.forEach(name => {
+      const o = document.createElement('option');
+      o.textContent = name;
+      sel.appendChild(o);
+    });
+  }
+
+  if (cfg.maschinentypen && cfg.maschinentypen.length) {
+    const sel = document.getElementById('machine-type');
+    sel.innerHTML = '<option value="">Auswählen...</option>';
+    cfg.maschinentypen.forEach(m => {
+      const o = document.createElement('option');
+      o.value = m.checkliste;
+      o.textContent = m.name;
+      sel.appendChild(o);
+    });
+  }
+
+  if (cfg.checklisten) {
+    Object.keys(cfg.checklisten).forEach(key => {
+      CHECKLISTS[key] = cfg.checklisten[key];
+    });
+  }
+}
+
+// ─── Einstellungen ────────────────────────────────────────────────────────────
+function saveNasUrl() {
+  const url = document.getElementById('nas-url').value.trim();
+  localStorage.setItem('nas-url', url);
+
+  if (!url) {
+    updateConfigStatus();
+    toast('URL gelöscht — eingebaute Defaults werden genutzt');
+    return;
+  }
+
+  const btn = document.getElementById('nas-save-btn');
+  btn.textContent = 'Lade...';
+  btn.disabled = true;
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 6000);
+
+  fetch(url + '?v=' + Date.now(), { signal: controller.signal })
+    .then(r => {
+      clearTimeout(timer);
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
+    .then(cfg => {
+      localStorage.setItem('cached-config', JSON.stringify(cfg));
+      localStorage.setItem('cached-config-ts', new Date().toISOString());
+      applyConfig(cfg);
+      buildChecklist();
+      updateConfigStatus();
+      toast('Config erfolgreich geladen ✓');
+    })
+    .catch(err => {
+      updateConfigStatus();
+      toast('Config-Update fehlgeschlagen. URL gespeichert — wird beim nächsten Start erneut versucht.');
+    })
+    .finally(() => {
+      btn.textContent = 'Speichern & jetzt aktualisieren';
+      btn.disabled = false;
+    });
+}
+
+function updateConfigStatus() {
+  const el = document.getElementById('config-status');
+  if (!el) return;
+  const nasUrl = localStorage.getItem('nas-url') || '';
+  const ts = localStorage.getItem('cached-config-ts');
+  const hasCached = !!localStorage.getItem('cached-config');
+
+  if (!nasUrl) {
+    el.innerHTML = '<span style="color:var(--orange)">Keine NAS-URL gespeichert</span> — eingebaute Standardliste aktiv.';
+  } else if (hasCached && ts) {
+    el.innerHTML = `NAS: <code>${nasUrl}</code><br>Zuletzt aktualisiert: <strong>${new Date(ts).toLocaleString('de-DE')}</strong>`;
+  } else {
+    el.innerHTML = `NAS: <code>${nasUrl}</code><br><span style="color:var(--orange)">Noch kein Cache — beim nächsten Mal mit NAS wird gespeichert.</span>`;
+  }
+}
+
+// ─── Navigation ───────────────────────────────────────────────────────────────
+function showPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  btn.classList.add('active');
+  if (name === 'check') updateProgress();
+  if (name === 'reports') renderReports();
+  if (name === 'settings') updateConfigStatus();
+}
+
+// ─── Shift ────────────────────────────────────────────────────────────────────
+let selectedShift = '';
+function selectShift(btn, val) {
+  selectedShift = val;
+  document.querySelectorAll('.shift-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+
+// ─── Toggle ───────────────────────────────────────────────────────────────────
+function toggleField(id) {
+  const el = document.getElementById(id);
+  const cb = document.getElementById(id.replace('-detail', ''));
+  el.style.display = cb.checked ? 'block' : 'none';
+}
+
+// ─── Machine Type Change ──────────────────────────────────────────────────────
+function onMachineTypeChange() {
+  state.checkData = {};
+  buildChecklist();
+}
+
+function getMachineKey() {
+  const sel = document.getElementById('machine-type');
+  return sel.options[sel.selectedIndex].value;
+}
+
+// ─── Checklist Builder ────────────────────────────────────────────────────────
+function buildChecklist() {
+  const key = getMachineKey();
+  const sections = CHECKLISTS[key] || CHECKLISTS.SBZ;
+  const hasSpin = key === 'SBZ' || key === 'SBZ_130_131';
+
+  let headerHtml = `
+    <div class="hours-row">
+      <div class="hours-box">
+        <label>Betriebs-Stunden</label>
+        <input type="number" id="betriebs-std" placeholder="0" value="${state.betriebsStunden}"
+          oninput="state.betriebsStunden=this.value">
+      </div>
+      ${hasSpin ? `<div class="hours-box">
+        <label>Spindel-Stunden</label>
+        <input type="number" id="spindel-std" placeholder="0" value="${state.spindelStunden}"
+          oninput="state.spindelStunden=this.value">
+      </div>` : `<div class="hours-box"><label>Maschinentyp</label><div style="font-size:16px;font-weight:600;padding-top:8px">${key}</div></div>`}
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+    <div class="progress-text" id="prog-text">0 / 0 geprüft</div>
+  `;
+  document.getElementById('check-header').innerHTML = headerHtml;
+
+  let html = '';
+  sections.forEach((sec, si) => {
+    const secId = `sec-${si}`;
+    html += `
+      <div class="section-header" onclick="toggleSection('${secId}',this)">
+        <h2>${sec.name}</h2>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span class="badge" id="badge-${secId}">0/${sec.items.length}</span>
+          <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+      </div>
+      <div class="section-body" id="${secId}">
+    `;
+    sec.items.forEach((item, ii) => {
+      const key2 = `${si}:${ii}`;
+      const d = state.checkData[key2] || {};
+      html += `
+        <div class="check-item" id="ci-${si}-${ii}">
+          <div class="check-item-label">${item}</div>
+          <div class="check-controls">
+            <button class="io-btn ${d.io ? 'io-active' : ''}" onclick="setIO('${si}','${ii}','io')">✓ I.O.</button>
+            <button class="io-btn ${d.nio ? 'nio-active' : ''}" onclick="setIO('${si}','${ii}','nio')">✗ n.I.O.</button>
+            <select class="status-sel ${d.status ? 'has-val' : ''}" onchange="setStatus('${si}','${ii}',this)">
+              ${STATUS_OPTIONS.map(o => `<option value="${o}" ${d.status===o?'selected':''}>${o||'Status...'}</option>`).join('')}
+            </select>
+          </div>
+          <div class="remark-field">
+            <div class="remark-toggle" onclick="toggleRemark('rm-${si}-${ii}')">+ Bemerkung</div>
+            <textarea class="remark-input ${d.remark ? 'show' : ''}" id="rm-${si}-${ii}" placeholder="Bemerkung..."
+              oninput="setRemark('${si}','${ii}',this.value)">${d.remark||''}</textarea>
+          </div>
+        </div>
+      `;
+    });
+    html += '</div>';
+  });
+  document.getElementById('checklist-container').innerHTML = html;
+  updateProgress();
+}
+
+function toggleSection(id, hdr) {
+  const body = document.getElementById(id);
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  hdr.classList.toggle('open', !isOpen);
+}
+
+function setIO(si, ii, type) {
+  const k = `${si}:${ii}`;
+  if (!state.checkData[k]) state.checkData[k] = {};
+  const d = state.checkData[k];
+  if (type === 'io') { d.io = !d.io; if (d.io) d.nio = false; }
+  else { d.nio = !d.nio; if (d.nio) d.io = false; }
+  const ci = document.getElementById(`ci-${si}-${ii}`);
+  ci.querySelectorAll('.io-btn').forEach((b, i) => {
+    b.classList.remove('io-active', 'nio-active');
+    if (i === 0 && d.io) b.classList.add('io-active');
+    if (i === 1 && d.nio) b.classList.add('nio-active');
+  });
+  updateProgress();
+  updateBadge(si);
+}
+
+function setStatus(si, ii, sel) {
+  const k = `${si}:${ii}`;
+  if (!state.checkData[k]) state.checkData[k] = {};
+  state.checkData[k].status = sel.value;
+  sel.classList.toggle('has-val', !!sel.value);
+}
+
+function setRemark(si, ii, val) {
+  const k = `${si}:${ii}`;
+  if (!state.checkData[k]) state.checkData[k] = {};
+  state.checkData[k].remark = val;
+}
+
+function toggleRemark(id) {
+  document.getElementById(id).classList.toggle('show');
+}
+
+function updateProgress() {
+  const key = getMachineKey();
+  const sections = CHECKLISTS[key] || CHECKLISTS.SBZ;
+  let total = 0, done = 0;
+  sections.forEach((sec, si) => {
+    let secDone = 0;
+    sec.items.forEach((_, ii) => {
+      total++;
+      const d = state.checkData[`${si}:${ii}`] || {};
+      if (d.io || d.nio || d.status) { done++; secDone++; }
+    });
+    const badge = document.getElementById(`badge-sec-${si}`);
+    if (badge) badge.textContent = `${secDone}/${sec.items.length}`;
+  });
+  const pct = total ? Math.round(done / total * 100) : 0;
+  const fill = document.getElementById('prog-fill');
+  const txt = document.getElementById('prog-text');
+  if (fill) fill.style.width = pct + '%';
+  if (txt) txt.textContent = `${done} / ${total} geprüft (${pct}%)`;
+}
+
+function updateBadge(si) {
+  const key = getMachineKey();
+  const sections = CHECKLISTS[key] || CHECKLISTS.SBZ;
+  const sec = sections[si];
+  if (!sec) return;
+  let done = 0;
+  sec.items.forEach((_, ii) => {
+    const d = state.checkData[`${si}:${ii}`] || {};
+    if (d.io || d.nio || d.status) done++;
+  });
+  const badge = document.getElementById(`badge-sec-${si}`);
+  if (badge) badge.textContent = `${done}/${sec.items.length}`;
+}
+
+// ─── Save / Load ──────────────────────────────────────────────────────────────
+function collectCoverData() {
+  return {
+    maschinentyp: document.getElementById('machine-type').options[document.getElementById('machine-type').selectedIndex].text,
+    maschinentyp_key: getMachineKey(),
+    maschinennr: document.getElementById('machine-nr').value,
+    baujahr: document.getElementById('baujahr').value,
+    datum: document.getElementById('datum').value,
+    techniker: document.getElementById('techniker').value,
+    schicht: selectedShift,
+    bedingungen: document.getElementById('bedingungen').checked,
+    bedingungen_detail: document.getElementById('bedingungen-detail').value,
+    zugaenglichkeit: document.getElementById('zugaenglichkeit').checked,
+    verzoegerung: document.getElementById('verzoegerung').checked,
+    verzoegerung_detail: document.getElementById('verzoegerung-detail').value,
+    bemerkungen: document.getElementById('bemerkungen').value,
+  };
+}
+
+function saveSession() {
+  const reports = JSON.parse(localStorage.getItem('wartung-reports') || '[]');
+  const cover = collectCoverData();
+  const report = {
+    id: Date.now(),
+    cover,
+    checkData: { ...state.checkData },
+    betriebsStunden: state.betriebsStunden,
+    spindelStunden: state.spindelStunden,
+    savedAt: new Date().toISOString(),
+  };
+  reports.unshift(report);
+  localStorage.setItem('wartung-reports', JSON.stringify(reports));
+  toast('Bericht gespeichert ✓');
+}
+
+function renderReports() {
+  const reports = JSON.parse(localStorage.getItem('wartung-reports') || '[]');
+  const el = document.getElementById('reports-list');
+  if (!reports.length) {
+    el.innerHTML = `<div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      <p>Noch keine Berichte gespeichert</p>
+    </div>`;
+    return;
+  }
+  el.innerHTML = reports.map(r => {
+    const c = r.cover;
+    const total = Object.keys(r.checkData).length;
+    const done = Object.values(r.checkData).filter(d => d.io || d.nio || d.status).length;
+    return `
+      <div class="report-item">
+        <div class="report-item-header">
+          <h3>${c.maschinentyp || 'Unbekannt'} ${c.maschinennr ? '#'+c.maschinennr : ''}</h3>
+          <span class="date">${c.datum || '—'}</span>
+        </div>
+        <div class="meta">Techniker: ${c.techniker || '—'} · ${done} Punkte bearbeitet</div>
+        ${c.betriebsStunden ? `<div class="meta">Betr.-Std: ${r.betriebsStunden}</div>` : ''}
+        <div class="report-actions">
+          <button class="btn-sm" onclick="loadReport(${r.id})">Laden</button>
+          <button class="btn-sm primary" onclick="exportPDF(${r.id})">PDF</button>
+          <button class="btn-sm" onclick="printReport(${r.id})">Drucken</button>
+          <button class="btn-sm danger" onclick="deleteReport(${r.id})">Löschen</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function loadReport(id) {
+  const reports = JSON.parse(localStorage.getItem('wartung-reports') || '[]');
+  const r = reports.find(x => x.id === id);
+  if (!r) return;
+  const c = r.cover;
+  // Cover
+  Array.from(document.getElementById('machine-type').options).forEach(o => {
+    if (o.text === c.maschinentyp) { document.getElementById('machine-type').value = o.value; }
+  });
+  document.getElementById('machine-nr').value = c.maschinennr || '';
+  document.getElementById('baujahr').value = c.baujahr || '';
+  document.getElementById('datum').value = c.datum || '';
+  document.getElementById('techniker').value = c.techniker || '';
+  selectedShift = c.schicht || '';
+  document.querySelectorAll('.shift-btn').forEach(b => {
+    b.classList.toggle('selected', b.textContent.trim() === selectedShift);
+  });
+  document.getElementById('bedingungen').checked = c.bedingungen;
+  document.getElementById('bedingungen-detail').value = c.bedingungen_detail || '';
+  document.getElementById('bedingungen-detail').style.display = c.bedingungen ? 'block' : 'none';
+  document.getElementById('zugaenglichkeit').checked = c.zugaenglichkeit !== false;
+  document.getElementById('verzoegerung').checked = c.verzoegerung;
+  document.getElementById('verzoegerung-detail').value = c.verzoegerung_detail || '';
+  document.getElementById('verzoegerung-detail').style.display = c.verzoegerung ? 'block' : 'none';
+  document.getElementById('bemerkungen').value = c.bemerkungen || '';
+  // Checklist
+  state.checkData = { ...r.checkData };
+  state.betriebsStunden = r.betriebsStunden || '';
+  state.spindelStunden = r.spindelStunden || '';
+  buildChecklist();
+  toast('Bericht geladen');
+  showPage('cover', document.querySelector('nav button'));
+}
+
+function deleteReport(id) {
+  let reports = JSON.parse(localStorage.getItem('wartung-reports') || '[]');
+  reports = reports.filter(r => r.id !== id);
+  localStorage.setItem('wartung-reports', JSON.stringify(reports));
+  renderReports();
+  toast('Bericht gelöscht');
+}
+
+
+function printReport(id) {
+  const reports = JSON.parse(localStorage.getItem('wartung-reports') || '[]');
+  const r = reports.find(x => x.id === id);
+  if (!r) return;
+  const c = r.cover;
+  const sections = CHECKLISTS[c.maschinentyp_key] || CHECKLISTS.SBZ;
+  let html = `<html><head><meta charset="UTF-8"><title>Wartungsprotokoll</title>
+  <style>
+    body{font-family:Arial,sans-serif;font-size:12px;color:#000;margin:20px}
+    h1{font-size:18px;margin-bottom:4px}
+    .meta{color:#555;margin-bottom:16px}
+    table{width:100%;border-collapse:collapse;margin-bottom:16px}
+    th{background:#eee;text-align:left;padding:6px 8px;font-size:11px}
+    td{padding:6px 8px;border-bottom:1px solid #ddd;font-size:11px}
+    h2{font-size:13px;font-weight:bold;margin:16px 0 6px;background:#f5f5f5;padding:4px 8px}
+    .io{color:green;font-weight:bold} .nio{color:red;font-weight:bold}
+    @page{margin:15mm}
+  </style></head><body>
+  <h1>Wartungsprotokoll – ${c.maschinentyp}</h1>
+  <div class="meta">
+    Datum: ${c.datum || '—'} &nbsp;|&nbsp; Techniker: ${c.techniker || '—'} &nbsp;|&nbsp;
+    Maschinennr: ${c.maschinennr || '—'} &nbsp;|&nbsp; Baujahr: ${c.baujahr || '—'} &nbsp;|&nbsp;
+    Schicht: ${c.schicht || '—'}<br>
+    Betriebs-Std: ${r.betriebsStunden || '—'} &nbsp;|&nbsp; Spindel-Std: ${r.spindelStunden || '—'}
+    ${c.bemerkungen ? `<br>Bemerkungen: ${c.bemerkungen}` : ''}
+    ${c.verzoegerung ? `<br>Verzögerung: ${c.verzoegerung_detail || 'Ja'}` : ''}
+  </div>`;
+  sections.forEach((sec, si) => {
+    html += `<h2>${sec.name}</h2><table><tr><th style="width:60%">Prüfpunkt</th><th>I.O.</th><th>n.I.O.</th><th>Status</th><th>Bemerkung</th></tr>`;
+    sec.items.forEach((item, ii) => {
+      const d = r.checkData[`${si}:${ii}`] || {};
+      html += `<tr>
+        <td>${item}</td>
+        <td class="io">${d.io ? '✓' : ''}</td>
+        <td class="nio">${d.nio ? '✗' : ''}</td>
+        <td>${d.status || ''}</td>
+        <td>${d.remark || ''}</td>
+      </tr>`;
+    });
+    html += '</table>';
+  });
+  html += '</body></html>';
+  const w = window.open('', '_blank');
+  w.document.write(html);
+  w.document.close();
+  w.print();
+}
+
+// ─── PDF Export ───────────────────────────────────────────────────────────────
+let _jspdfLoaded = false;
+function loadJsPDF(cb) {
+  if (_jspdfLoaded) { cb(); return; }
+  toast('PDF-Bibliothek wird geladen...');
+  const s1 = document.createElement('script');
+  s1.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+  s1.onload = () => {
+    const s2 = document.createElement('script');
+    s2.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js';
+    s2.onload = () => { _jspdfLoaded = true; cb(); };
+    document.head.appendChild(s2);
+  };
+  document.head.appendChild(s1);
+}
+
+function exportPDF(id) {
+  loadJsPDF(() => getLogoDataUrl().then(logoUrl => _exportPDF(id, logoUrl)));
+}
+
+function getLogoDataUrl() {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth * 3;
+      canvas.height = img.naturalHeight * 3;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      try { resolve(canvas.toDataURL('image/png')); } catch(e) { resolve(null); }
+    };
+    img.onerror = () => resolve(null);
+    img.src = './icons/elumatec_logos.svg';
+  });
+}
+
+function _exportPDF(id, logoUrl) {
+  const reports = JSON.parse(localStorage.getItem('wartung-reports') || '[]');
+  const r = reports.find(x => x.id === id);
+  if (!r) return;
+
+  const { jsPDF } = window.jspdf || window;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const c = r.cover;
+  const sections = CHECKLISTS[c.maschinentyp_key] || CHECKLISTS.SBZ;
+
+  // Elumatec brand colors
+  const ORANGE = [232, 98, 10];
+  const DARK = [28, 28, 28];
+  const LIGHT = [240, 242, 244];
+  const WHITE = [255, 255, 255];
+  const GREEN_T = [220, 245, 225];
+  const RED_T = [254, 226, 226];
+  const ORANGE_LIGHT = [255, 237, 224];
+
+  const W = 210, ML = 14, MR = 14, CW = W - ML - MR;
+  let y = 14;
+
+  // Header bar: dunkel mit orangem Akzentstreifen
+  doc.setFillColor(...DARK);
+  doc.rect(0, 0, W, 24, 'F');
+  doc.setFillColor(...ORANGE);
+  doc.rect(0, 24, W, 2, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(15);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Wartungsprotokoll', ML, 11);
+  doc.setFontSize(8.5);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(180, 180, 180);
+  doc.text(`${c.maschinentyp || ''}  |  ${c.datum || ''}  |  ${c.techniker || ''}`, ML, 19);
+  // Elumatec Logo oben rechts im Header
+  if (logoUrl) {
+    const lw = 52, lh = 52 * (40.105 / 238.238); // ~8.7mm Höhe
+    doc.addImage(logoUrl, 'PNG', W - ML - lw, (24 - lh) / 2, lw, lh);
+  }
+  y = 32;
+
+  // Cover info box: hellgrauer Hintergrund mit orangem linkem Rand
+  doc.setFillColor(...LIGHT);
+  doc.rect(ML, y, CW, 30, 'F');
+  doc.setFillColor(...ORANGE);
+  doc.rect(ML, y, 3, 30, 'F');
+
+  const infoLeft = [
+    ['Maschinentyp', c.maschinentyp || '—'],
+    ['Maschinennr.', c.maschinennr || '—'],
+    ['Baujahr', c.baujahr || '—'],
+    ['Schicht', c.schicht || '—'],
+  ];
+  const infoRight = [
+    ['Betriebs-Std.', r.betriebsStunden || '—'],
+    ['Spindel-Std.', r.spindelStunden || '—'],
+    ['Zugänglichkeit', c.zugaenglichkeit ? 'Ja' : 'Nein'],
+    ['Verzögerung', c.verzoegerung ? (c.verzoegerung_detail || 'Ja') : 'Nein'],
+  ];
+
+  doc.setFontSize(8);
+  infoLeft.forEach(([label, val], i) => {
+    const iy = y + 6 + i * 6.5;
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(100, 100, 100);
+    doc.text(label + ':', ML + 6, iy);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(28, 28, 28);
+    doc.text(String(val), ML + 38, iy);
+  });
+  infoRight.forEach(([label, val], i) => {
+    const iy = y + 6 + i * 6.5;
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(100, 100, 100);
+    doc.text(label + ':', ML + CW / 2 + 4, iy);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(28, 28, 28);
+    doc.text(String(val), ML + CW / 2 + 36, iy);
+  });
+  y += 34;
+
+  if (c.bemerkungen) {
+    doc.setFillColor(255, 248, 240);
+    doc.rect(ML, y, CW, 10, 'F');
+    doc.setFillColor(...ORANGE);
+    doc.rect(ML, y, 3, 10, 'F');
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...ORANGE);
+    doc.text('Bemerkungen:', ML + 6, y + 4);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(28, 28, 28);
+    const lines = doc.splitTextToSize(c.bemerkungen, CW - 50);
+    doc.text(lines, ML + 42, y + 4);
+    y += lines.length * 4 + 8;
+  }
+
+  // Sections — Bemerkungsspalte entfernt, wird separat am Ende gesammelt
+  const allRemarks = []; // { section, item, remark }
+
+  sections.forEach((sec, si) => {
+    if (y > 260) { doc.addPage(); y = 14; }
+
+    doc.setFillColor(...DARK);
+    doc.rect(ML, y, CW, 7.5, 'F');
+    doc.setFillColor(...ORANGE);
+    doc.rect(ML, y, 3, 7.5, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(8.5);
+    doc.setFont('helvetica', 'bold');
+    doc.text(sec.name.toUpperCase(), ML + 6, y + 5.2);
+    y += 9;
+
+    const rows = sec.items.map((item, ii) => {
+      const d = r.checkData[`${si}:${ii}`] || {};
+      if (d.remark) allRemarks.push({ section: sec.name, item, remark: d.remark });
+      return { item, io: d.io ? '✓' : '', nio: d.nio ? '✗' : '', status: d.status || '', _nio: d.nio, _io: d.io };
+    });
+
+    doc.autoTable({
+      startY: y,
+      margin: { left: ML, right: MR },
+      theme: 'plain',
+      styles: {
+        fontSize: 7.5,
+        cellPadding: { top: 2.5, bottom: 2.5, left: 3, right: 3 },
+        textColor: [28, 28, 28],
+        lineColor: [210, 212, 215],
+        lineWidth: 0.2,
+        font: 'helvetica',
+      },
+      headStyles: { fillColor: ORANGE, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7 },
+      alternateRowStyles: { fillColor: [248, 248, 248] },
+      columnStyles: {
+        0: { cellWidth: CW * 0.60 },
+        1: { cellWidth: CW * 0.10, halign: 'center', fontStyle: 'bold' },
+        2: { cellWidth: CW * 0.10, halign: 'center', fontStyle: 'bold' },
+        3: { cellWidth: CW * 0.20, halign: 'center' },
+      },
+      head: [['Prüfpunkt', 'I.O.', 'n.I.O.', 'Status']],
+      body: rows.map(r2 => [r2.item, r2.io, r2.nio, r2.status]),
+      didParseCell(data) {
+        if (data.section === 'body') {
+          const row = rows[data.row.index];
+          if (row._io && data.column.index === 1) { data.cell.styles.textColor = [30, 140, 60]; data.cell.styles.fillColor = GREEN_T; }
+          if (row._nio && data.column.index === 2) { data.cell.styles.textColor = [200, 40, 40]; }
+          if (row._nio) { data.cell.styles.fillColor = RED_T; }
+        }
+      },
+    });
+    y = doc.lastAutoTable.finalY + 6;
+  });
+
+  // Bemerkungen am Ende — sortiert nach Sektionsreihenfolge (= Prüfpunktreihenfolge)
+  if (allRemarks.length > 0) {
+    if (y > 240) { doc.addPage(); y = 14; }
+
+    doc.setFillColor(...DARK);
+    doc.rect(ML, y, CW, 7.5, 'F');
+    doc.setFillColor(...ORANGE);
+    doc.rect(ML, y, 3, 7.5, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(8.5);
+    doc.setFont('helvetica', 'bold');
+    doc.text('BEMERKUNGEN', ML + 6, y + 5.2);
+    y += 9;
+
+    // Nach Sektion gruppieren
+    const bySection = [];
+    allRemarks.forEach(m => {
+      const last = bySection[bySection.length - 1];
+      if (last && last.section === m.section) last.remarks.push(m.remark);
+      else bySection.push({ section: m.section, remarks: [m.remark] });
+    });
+
+    bySection.forEach(group => {
+      if (y > 270) { doc.addPage(); y = 14; }
+      // Sektionsname als Mini-Header
+      doc.setFillColor(...LIGHT);
+      doc.rect(ML, y, CW, 6, 'F');
+      doc.setFillColor(...ORANGE);
+      doc.rect(ML, y, 3, 6, 'F');
+      doc.setTextColor(28, 28, 28);
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'bold');
+      doc.text(group.section, ML + 6, y + 4.2);
+      y += 7;
+
+      // Bemerkungen darunter
+      group.remarks.forEach(rem => {
+        const lines = doc.splitTextToSize('– ' + rem, CW - 8);
+        if (y + lines.length * 4.5 > 278) { doc.addPage(); y = 14; }
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(60, 60, 60);
+        doc.text(lines, ML + 4, y + 4);
+        y += lines.length * 4.5 + 2;
+      });
+      y += 3;
+    });
+  }
+
+  // Footer auf jeder Seite: dunkel mit orangem Trennstrich
+  const pageCount = doc.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFillColor(...ORANGE);
+    doc.rect(0, 288, W, 0.8, 'F');
+    doc.setFillColor(...DARK);
+    doc.rect(0, 288.8, W, 8.2, 'F');
+    doc.setFontSize(7);
+    doc.setTextColor(160, 160, 160);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Wartungsprotokoll  –  ${c.maschinentyp || ''}  –  ${c.datum || ''}`, ML, 294);
+    doc.setTextColor(...ORANGE);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`${i} / ${pageCount}`, W - MR, 294, { align: 'right' });
+  }
+
+  const fname = `Wartung_${(c.maschinentyp||'').replace(/\s/g,'_')}_${c.datum||'unbekannt'}.pdf`;
+  doc.save(fname);
+  toast('PDF gespeichert ✓');
+}
+
+// ─── Toast ────────────────────────────────────────────────────────────────────
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+</script>
+</body>
+</html>
