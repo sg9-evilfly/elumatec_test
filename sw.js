@@ -1,13 +1,18 @@
-const CACHE = 'wartung-v2';
-const ASSETS = [
-  './',
-  './index.html',
-  './manifest.json',
-  './icons/elumatec_logos.svg',
-];
+const CACHE = 'wartung-v4';
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
+  const base = self.registration.scope;
+  const ASSETS = [
+    base,
+    base + 'index.html',
+    base + 'manifest.json',
+    base + 'icons/elumatec_logos.svg',
+  ];
+  e.waitUntil(
+    caches.open(CACHE).then(c =>
+      Promise.allSettled(ASSETS.map(url => c.add(url)))
+    )
+  );
   self.skipWaiting();
 });
 
@@ -19,15 +24,20 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  // Config von GitHub immer frisch holen (network-first), bei Fehler Cache
+  // GitHub config immer live holen, bei Offline gecachte Version
   if (e.request.url.includes('raw.githubusercontent.com')) {
     e.respondWith(
       fetch(e.request).catch(() => caches.match(e.request))
     );
     return;
   }
-  // Alles andere: Cache-first
+  // Alles andere: Cache first, dann Netz, Fallback index.html
   e.respondWith(
-    caches.match(e.request).then(r => r || fetch(e.request).catch(() => caches.match('./index.html')))
+    caches.match(e.request).then(cached => {
+      if (cached) return cached;
+      return fetch(e.request).catch(() =>
+        caches.match(self.registration.scope + 'index.html')
+      );
+    })
   );
 });
