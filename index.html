@@ -204,7 +204,7 @@
           </div>
           <div>
             <label>Baujahr</label>
-            <input type="text" id="baujahr" placeholder="z.B. 2018">
+            <input type="number" id="baujahr" placeholder="z.B. 2018" min="1980" max="2099" step="1" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,4)">
           </div>
         </div>
         <div class="form-row">
@@ -290,17 +290,13 @@
     <!-- EINSTELLUNGEN -->
     <div id="page-settings" class="page">
       <div class="card">
-        <h3>NAS / Server Adresse</h3>
-        <label>URL zur config.json auf deinem NAS</label>
-        <input type="text" id="nas-url" placeholder="http://192.168.1.100/wartung/config.json">
+        <h3>Config-URL</h3>
+        <label>URL zur config.json</label>
+        <input type="url" id="config-url-input" placeholder="https://...">
         <div style="font-size:12px;color:var(--text2);margin-top:-8px;margin-bottom:12px">
-          Einmal eintragen — App holt Updates automatisch wenn NAS erreichbar ist.
+          App holt Updates automatisch beim Start wenn erreichbar.
         </div>
-        <button id="nas-save-btn" onclick="saveNasUrl()">Speichern &amp; jetzt aktualisieren</button>
-      </div>
-      <div class="card">
-        <h3>Config Status</h3>
-        <div id="config-status" style="font-size:13px;color:var(--text2)">—</div>
+        <button onclick="saveConfigUrl()">Speichern &amp; jetzt laden</button>
       </div>
     </div>
   </main>
@@ -308,7 +304,7 @@
   <nav>
     <button class="active" onclick="showPage('cover',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-      Deckblatt
+      Infos
     </button>
     <button onclick="showPage('check',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
@@ -708,8 +704,10 @@ const CHECKLISTS = {
 const STATUS_OPTIONS = ['', 'geprüft', 'gereinigt', 'justiert', 'Hinweis', 'defekt', 'fehlt', 'entfällt'];
 
 // ─── State ───────────────────────────────────────────────────────────────────
+// checkData-Schlüssel: "sektionsIndex:itemIndex" z.B. "2:5"
+// io und nio schließen sich gegenseitig aus (wird in setIO erzwungen)
 let state = {
-  checkData: {},    // { 'SectionName:itemIndex': { io: bool, nio: bool, status: string, remark: string } }
+  checkData: {},
   betriebsStunden: '',
   spindelStunden: '',
 };
@@ -718,47 +716,38 @@ let state = {
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('datum').value = new Date().toISOString().split('T')[0];
 
-  // NAS-URL aus localStorage lesen und Einstellungsfeld befüllen
-  const DEFAULT_URL = 'https://raw.githubusercontent.com/sg9-evilfly/elumatec_test/refs/heads/main/config.json';
-  const savedNasUrl = localStorage.getItem('nas-url') || DEFAULT_URL;
-  if (!localStorage.getItem('nas-url')) localStorage.setItem('nas-url', DEFAULT_URL);
-  document.getElementById('nas-url').value = savedNasUrl;
+  // Gespeicherte URL hat Vorrang vor dem eingebauten Default (GitHub)
+  const DEFAULT_CONFIG_URL = 'https://raw.githubusercontent.com/sg9-evilfly/elumatec_test/refs/heads/main/config.json';
+  const configUrl = localStorage.getItem('config-url') || DEFAULT_CONFIG_URL;
+  document.getElementById('config-url-input').value = configUrl;
 
   const cachedCfg = localStorage.getItem('cached-config');
 
   function finishInit() {
     buildChecklist();
     renderReports();
-    updateConfigStatus();
   }
 
-  if (savedNasUrl) {
-    // Versuche Config von NAS zu holen (timeout nach 4 Sek.)
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 4000);
+  // Timeout nach 4 Sek. damit die App bei schlechtem Netz nicht hängt
+  // ?v=... verhindert dass Browser oder CDN eine veraltete config.json cachen
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 4000);
 
-    fetch(savedNasUrl + '?v=' + Date.now(), { signal: controller.signal })
-      .then(r => { clearTimeout(timer); return r.json(); })
-      .then(cfg => {
-        localStorage.setItem('cached-config', JSON.stringify(cfg));
-        localStorage.setItem('cached-config-ts', new Date().toISOString());
-        applyConfig(cfg);
-        toast('Config aktualisiert ✓');
-      })
-      .catch(() => {
-        // Offline oder NAS nicht erreichbar → gecachten Config nutzen
-        if (cachedCfg) {
-          try { applyConfig(JSON.parse(cachedCfg)); } catch(e) {}
-        }
-      })
-      .finally(finishInit);
-  } else {
-    // Keine NAS-URL gespeichert → gecachten oder eingebauten Config nutzen
-    if (cachedCfg) {
-      try { applyConfig(JSON.parse(cachedCfg)); } catch(e) {}
-    }
-    finishInit();
-  }
+  fetch(configUrl + '?v=' + Date.now(), { signal: controller.signal })
+    .then(r => { clearTimeout(timer); return r.json(); })
+    .then(cfg => {
+      // Frische Config im localStorage speichern für Offline-Nutzung
+      localStorage.setItem('cached-config', JSON.stringify(cfg));
+      applyConfig(cfg);
+    })
+    .catch(() => {
+      // Offline oder Server nicht erreichbar → letzten gespeicherten Stand nutzen
+      if (cachedCfg) {
+        try { applyConfig(JSON.parse(cachedCfg)); } catch(e) {}
+      }
+      // Kein Cache vorhanden → eingebaute CHECKLISTS/Defaults bleiben aktiv
+    })
+    .finally(finishInit);
 });
 
 function applyConfig(cfg) {
@@ -777,13 +766,14 @@ function applyConfig(cfg) {
     sel.innerHTML = '<option value="">Auswählen...</option>';
     cfg.maschinentypen.forEach(m => {
       const o = document.createElement('option');
-      o.value = m.checkliste;
+      o.value = m.checkliste; // Schlüssel in CHECKLISTS z.B. "SBZ", "DG"
       o.textContent = m.name;
       sel.appendChild(o);
     });
   }
 
   if (cfg.checklisten) {
+    // Nur vorhandene Schlüssel überschreiben — fehlende Einträge behalten Defaults
     Object.keys(cfg.checklisten).forEach(key => {
       CHECKLISTS[key] = cfg.checklisten[key];
     });
@@ -791,61 +781,22 @@ function applyConfig(cfg) {
 }
 
 // ─── Einstellungen ────────────────────────────────────────────────────────────
-function saveNasUrl() {
-  const url = document.getElementById('nas-url').value.trim();
-  localStorage.setItem('nas-url', url);
-
-  if (!url) {
-    updateConfigStatus();
-    toast('URL gelöscht — eingebaute Defaults werden genutzt');
-    return;
-  }
-
-  const btn = document.getElementById('nas-save-btn');
-  btn.textContent = 'Lade...';
-  btn.disabled = true;
+function saveConfigUrl() {
+  const url = document.getElementById('config-url-input').value.trim();
+  if (url) localStorage.setItem('config-url', url);
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 6000);
 
-  fetch(url + '?v=' + Date.now(), { signal: controller.signal })
-    .then(r => {
-      clearTimeout(timer);
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      return r.json();
-    })
+  fetch((url || localStorage.getItem('config-url')) + '?v=' + Date.now(), { signal: controller.signal })
+    .then(r => { clearTimeout(timer); if (!r.ok) throw new Error(); return r.json(); })
     .then(cfg => {
       localStorage.setItem('cached-config', JSON.stringify(cfg));
-      localStorage.setItem('cached-config-ts', new Date().toISOString());
       applyConfig(cfg);
       buildChecklist();
-      updateConfigStatus();
       toast('Config erfolgreich geladen ✓');
     })
-    .catch(err => {
-      updateConfigStatus();
-      toast('Config-Update fehlgeschlagen. URL gespeichert — wird beim nächsten Start erneut versucht.');
-    })
-    .finally(() => {
-      btn.textContent = 'Speichern & jetzt aktualisieren';
-      btn.disabled = false;
-    });
-}
-
-function updateConfigStatus() {
-  const el = document.getElementById('config-status');
-  if (!el) return;
-  const nasUrl = localStorage.getItem('nas-url') || '';
-  const ts = localStorage.getItem('cached-config-ts');
-  const hasCached = !!localStorage.getItem('cached-config');
-
-  if (!nasUrl) {
-    el.innerHTML = '<span style="color:var(--orange)">Keine NAS-URL gespeichert</span> — eingebaute Standardliste aktiv.';
-  } else if (hasCached && ts) {
-    el.innerHTML = `NAS: <code>${nasUrl}</code><br>Zuletzt aktualisiert: <strong>${new Date(ts).toLocaleString('de-DE')}</strong>`;
-  } else {
-    el.innerHTML = `NAS: <code>${nasUrl}</code><br><span style="color:var(--orange)">Noch kein Cache — beim nächsten Mal mit NAS wird gespeichert.</span>`;
-  }
+    .catch(() => toast('URL nicht erreichbar — beim nächsten Start wird es erneut versucht.'));
 }
 
 // ─── Navigation ───────────────────────────────────────────────────────────────
@@ -856,7 +807,7 @@ function showPage(name, btn) {
   btn.classList.add('active');
   if (name === 'check') updateProgress();
   if (name === 'reports') renderReports();
-  if (name === 'settings') updateConfigStatus();
+
 }
 
 // ─── Shift ────────────────────────────────────────────────────────────────────
@@ -876,6 +827,7 @@ function toggleField(id) {
 
 // ─── Machine Type Change ──────────────────────────────────────────────────────
 function onMachineTypeChange() {
+  // Checkdaten zurücksetzen damit alte Antworten nicht in den neuen Maschinentyp übernommen werden
   state.checkData = {};
   buildChecklist();
 }
@@ -888,8 +840,8 @@ function getMachineKey() {
 // ─── Checklist Builder ────────────────────────────────────────────────────────
 function buildChecklist() {
   const key = getMachineKey();
-  const sections = CHECKLISTS[key] || CHECKLISTS.SBZ;
-  const hasSpin = key === 'SBZ' || key === 'SBZ_130_131';
+  const sections = CHECKLISTS[key] || CHECKLISTS.SBZ; // Fallback auf SBZ wenn kein Typ gewählt
+  const hasSpin = key === 'SBZ' || key === 'SBZ_130_131'; // Nur Spindelmaschinen haben Spindelstunden
 
   let headerHtml = `
     <div class="hours-row">
@@ -960,12 +912,13 @@ function setIO(si, ii, type) {
   const k = `${si}:${ii}`;
   if (!state.checkData[k]) state.checkData[k] = {};
   const d = state.checkData[k];
+  // Toggle: nochmaliges Drücken hebt die Auswahl auf; I.O. und n.I.O. schließen sich aus
   if (type === 'io') { d.io = !d.io; if (d.io) d.nio = false; }
-  else { d.nio = !d.nio; if (d.nio) d.io = false; }
+  else               { d.nio = !d.nio; if (d.nio) d.io = false; }
   const ci = document.getElementById(`ci-${si}-${ii}`);
   ci.querySelectorAll('.io-btn').forEach((b, i) => {
     b.classList.remove('io-active', 'nio-active');
-    if (i === 0 && d.io) b.classList.add('io-active');
+    if (i === 0 && d.io)  b.classList.add('io-active');
     if (i === 1 && d.nio) b.classList.add('nio-active');
   });
   updateProgress();
@@ -1047,14 +1000,14 @@ function saveSession() {
   const reports = JSON.parse(localStorage.getItem('wartung-reports') || '[]');
   const cover = collectCoverData();
   const report = {
-    id: Date.now(),
+    id: Date.now(), // Timestamp als eindeutige ID
     cover,
-    checkData: { ...state.checkData },
+    checkData: { ...state.checkData }, // Kopie damit spätere Änderungen den Bericht nicht verändern
     betriebsStunden: state.betriebsStunden,
     spindelStunden: state.spindelStunden,
     savedAt: new Date().toISOString(),
   };
-  reports.unshift(report);
+  reports.unshift(report); // Neuester Bericht immer oben in der Liste
   localStorage.setItem('wartung-reports', JSON.stringify(reports));
   toast('Bericht gespeichert ✓');
 }
@@ -1184,6 +1137,8 @@ function printReport(id) {
 }
 
 // ─── PDF Export ───────────────────────────────────────────────────────────────
+// jsPDF wird erst beim ersten PDF-Export geladen (nicht beim App-Start)
+// damit die App nicht durch externe CDN-Requests beim Laden blockiert wird
 let _jspdfLoaded = false;
 function loadJsPDF(cb) {
   if (_jspdfLoaded) { cb(); return; }
@@ -1203,6 +1158,9 @@ function exportPDF(id) {
   loadJsPDF(() => getLogoDataUrl().then(logoUrl => _exportPDF(id, logoUrl)));
 }
 
+// jsPDF unterstützt kein SVG direkt — Logo über Canvas in PNG umwandeln
+// Skalierung 3x für ausreichende Druckauflösung
+// Bei Fehler (z.B. CORS auf file://) wird logoUrl=null übergeben → kein Logo im PDF
 function getLogoDataUrl() {
   return new Promise(resolve => {
     const img = new Image();
@@ -1227,17 +1185,19 @@ function _exportPDF(id, logoUrl) {
   const { jsPDF } = window.jspdf || window;
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const c = r.cover;
+  // Checkliste zum Zeitpunkt der Speicherung kann abweichen wenn config.json seitdem geändert wurde
   const sections = CHECKLISTS[c.maschinentyp_key] || CHECKLISTS.SBZ;
 
-  // Elumatec brand colors
-  const ORANGE = [232, 98, 10];
-  const DARK = [28, 28, 28];
-  const LIGHT = [240, 242, 244];
-  const WHITE = [255, 255, 255];
-  const GREEN_T = [220, 245, 225];
-  const RED_T = [254, 226, 226];
-  const ORANGE_LIGHT = [255, 237, 224];
+  // Elumatec Farben als RGB-Arrays für jsPDF (kein Hex möglich)
+  const ORANGE = [232, 98, 10];   // #E8620A
+  const DARK   = [28, 28, 28];    // #1C1C1C
+  const LIGHT  = [240, 242, 244]; // #F0F2F4
+  const WHITE  = [255, 255, 255];
+  const GREEN_T      = [220, 245, 225]; // I.O.-Zeilen Hintergrund
+  const RED_T        = [254, 226, 226]; // n.I.O.-Zeilen Hintergrund
+  const ORANGE_LIGHT = [255, 237, 224]; // Hinweis/Status-Zeilen Hintergrund
 
+  // W=A4-Breite, ML/MR=Randabstand, CW=nutzbare Breite, y=aktuelle Zeichenposition
   const W = 210, ML = 14, MR = 14, CW = W - ML - MR;
   let y = 14;
 
