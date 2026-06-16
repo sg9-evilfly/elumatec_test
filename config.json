@@ -34,6 +34,10 @@
     { "name": "DG 244",           "checkliste": "DG" }
   ],
 
+  "mailcc": "aftersales@elumatec.com",
+
+  "mailtext": "Sehr geehrte Damen und Herren,\n\nin der Anlage erhalten Sie das Wartungsprotokoll unserer letzten Wartung. Alle Arbeiten wurden ordnungsgemäß durchgeführt. Bei Fragen stehen wir Ihnen jederzeit gerne zur Verfügung.\n\nMit freundlichen Grüßen\n[techniker]",
+
   "checklisten": {
     "SBZ": [
       {

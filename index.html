@@ -331,7 +331,7 @@
     <input type="email" id="email-to" placeholder="kunde@beispiel.de"
       style="width:100%;margin-bottom:12px">
     <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:4px">CC (fest)</label>
-    <input type="text" value="aftersales@elumatec.com" disabled
+    <input type="text" id="email-cc-display" value="aftersales@elumatec.com" disabled
       style="width:100%;margin-bottom:20px;background:var(--surface2);color:var(--text2)">
     <div style="display:flex;gap:8px;justify-content:flex-end">
       <button class="btn-sm" onclick="closeEmailModal()">Abbrechen</button>
@@ -720,6 +720,10 @@ const CHECKLISTS = {
 
 const STATUS_OPTIONS = ['', 'geprüft', 'gereinigt', 'justiert', 'Hinweis', 'defekt', 'fehlt', 'entfällt'];
 
+// Standard-Mailtext — [techniker] wird beim Senden durch den Namen aus dem Bericht ersetzt
+let MAILTEXT = "Sehr geehrte Damen und Herren,\n\nin der Anlage erhalten Sie das Wartungsprotokoll unserer letzten Wartung. Alle Arbeiten wurden ordnungsgemäß durchgeführt. Bei Fragen stehen wir Ihnen jederzeit gerne zur Verfügung.\n\nMit freundlichen Grüßen\n[techniker]";
+let MAILCC = "aftersales@elumatec.com";
+
 // ─── State ───────────────────────────────────────────────────────────────────
 // checkData-Schlüssel: "sektionsIndex:itemIndex" z.B. "2:5"
 // io und nio schließen sich gegenseitig aus (wird in setIO erzwungen)
@@ -795,6 +799,9 @@ function applyConfig(cfg) {
       CHECKLISTS[key] = cfg.checklisten[key];
     });
   }
+
+  if (cfg.mailtext) MAILTEXT = cfg.mailtext;
+  if (cfg.mailcc)   MAILCC   = cfg.mailcc;
 }
 
 // ─── Einstellungen ────────────────────────────────────────────────────────────
@@ -1106,6 +1113,7 @@ let _emailReportId = null;
 function showEmailModal(id) {
   _emailReportId = id;
   document.getElementById('email-to').value = '';
+  document.getElementById('email-cc-display').value = MAILCC;
   const modal = document.getElementById('email-modal');
   modal.style.display = 'flex';
   setTimeout(() => document.getElementById('email-to').focus(), 100);
@@ -1126,25 +1134,10 @@ function sendEmail() {
   const c = r.cover;
 
   const subject = `Wartungsprotokoll – ${c.maschinentyp || ''} – ${c.datum || ''}`;
-  const body = [
-    `Wartungsprotokoll`,
-    ``,
-    `Maschinentyp:  ${c.maschinentyp || '—'}`,
-    `Maschinennr.:  ${c.maschinennr || '—'}`,
-    `Baujahr:       ${c.baujahr || '—'}`,
-    `Datum:         ${c.datum || '—'}`,
-    `Techniker:     ${c.techniker || '—'}`,
-    `Schicht:       ${c.schicht || '—'}`,
-    `Betr.-Std.:    ${r.betriebsStunden || '—'}`,
-    `Spindel-Std.:  ${r.spindelStunden || '—'}`,
-    ``,
-    c.bemerkungen ? `Bemerkungen: ${c.bemerkungen}` : '',
-    ``,
-    `Geprüfte Punkte: ${Object.values(r.checkData).filter(d => d.io || d.nio || d.status).length}`,
-  ].join('\n');
+  const body = MAILTEXT.replace('[techniker]', c.techniker || '');
 
   // mailto: öffnet die Mail-App des Geräts mit vorausgefüllten Feldern
-  const mailto = `mailto:${encodeURIComponent(to)}?cc=${encodeURIComponent('aftersales@elumatec.com')}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  const mailto = `mailto:${encodeURIComponent(to)}?cc=${encodeURIComponent(MAILCC)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   window.location.href = mailto;
   closeEmailModal();
 }
