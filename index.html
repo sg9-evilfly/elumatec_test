@@ -323,22 +323,6 @@
 
 <div id="toast"></div>
 
-<!-- E-Mail Modal -->
-<div id="email-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;align-items:center;justify-content:center;padding:24px">
-  <div style="background:var(--surface);border-radius:var(--radius);padding:24px;width:100%;max-width:420px;box-shadow:0 8px 32px rgba(0,0,0,.2)">
-    <div style="font-size:14px;font-weight:700;margin-bottom:16px">E-Mail senden</div>
-    <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:4px">Empfänger (An)</label>
-    <input type="email" id="email-to" placeholder="kunde@beispiel.de"
-      style="width:100%;margin-bottom:12px">
-    <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:4px">CC (fest)</label>
-    <input type="text" id="email-cc-display" value="aftersales@elumatec.com" disabled
-      style="width:100%;margin-bottom:20px;background:var(--surface2);color:var(--text2)">
-    <div style="display:flex;gap:8px;justify-content:flex-end">
-      <button class="btn-sm" onclick="closeEmailModal()">Abbrechen</button>
-      <button class="btn-sm primary" onclick="sendEmail()">Öffnen in Mail-App</button>
-    </div>
-  </div>
-</div>
 
 <script>
 // ─── Data ───────────────────────────────────────────────────────────────────
@@ -720,9 +704,6 @@ const CHECKLISTS = {
 
 const STATUS_OPTIONS = ['', 'geprüft', 'gereinigt', 'justiert', 'Hinweis', 'defekt', 'fehlt', 'entfällt'];
 
-// Standard-Mailtext — [techniker] wird beim Senden durch den Namen aus dem Bericht ersetzt
-let MAILTEXT = "Sehr geehrte Damen und Herren,\n\nin der Anlage erhalten Sie das Wartungsprotokoll unserer letzten Wartung. Alle Arbeiten wurden ordnungsgemäß durchgeführt. Bei Fragen stehen wir Ihnen jederzeit gerne zur Verfügung.\n\nMit freundlichen Grüßen\n[techniker]";
-let MAILCC = "aftersales@elumatec.com";
 
 // ─── State ───────────────────────────────────────────────────────────────────
 // checkData-Schlüssel: "sektionsIndex:itemIndex" z.B. "2:5"
@@ -800,8 +781,6 @@ function applyConfig(cfg) {
     });
   }
 
-  if (cfg.mailtext) MAILTEXT = cfg.mailtext;
-  if (cfg.mailcc)   MAILCC   = cfg.mailcc;
 }
 
 // ─── Einstellungen ────────────────────────────────────────────────────────────
@@ -1061,11 +1040,10 @@ function renderReports() {
         </div>
         <div class="meta">Techniker: ${c.techniker || '—'} · ${pct}% abgeschlossen</div>
         ${r.betriebsStunden ? `<div class="meta">Betr.-Std: ${r.betriebsStunden}</div>` : ''}
-        ${!complete ? `<div style="font-size:11px;color:var(--orange);margin-top:6px">⚠ Checkliste unvollständig (${done}/${total}) — PDF und E-Mail erst bei 100%</div>` : ''}
+        ${!complete ? `<div style="font-size:11px;color:var(--orange);margin-top:6px">⚠ Checkliste unvollständig (${done}/${total}) — PDF erst bei 100%</div>` : ''}
         <div class="report-actions">
           <button class="btn-sm" onclick="loadReport(${r.id})">Laden</button>
           <button class="btn-sm primary" ${!complete ? 'disabled style="opacity:.4;cursor:not-allowed"' : ''} onclick="${complete ? `exportPDF(${r.id})` : ''}">PDF</button>
-          <button class="btn-sm" ${!complete ? 'disabled style="opacity:.4;cursor:not-allowed"' : ''} onclick="${complete ? `showEmailModal(${r.id})` : ''}">E-Mail</button>
           <button class="btn-sm danger" onclick="deleteReport(${r.id})">Löschen</button>
         </div>
       </div>
@@ -1107,40 +1085,6 @@ function loadReport(id) {
   showPage('cover', document.querySelector('nav button'));
 }
 
-// ─── E-Mail ───────────────────────────────────────────────────────────────────
-let _emailReportId = null;
-
-function showEmailModal(id) {
-  _emailReportId = id;
-  document.getElementById('email-to').value = '';
-  document.getElementById('email-cc-display').value = MAILCC;
-  const modal = document.getElementById('email-modal');
-  modal.style.display = 'flex';
-  setTimeout(() => document.getElementById('email-to').focus(), 100);
-}
-
-function closeEmailModal() {
-  document.getElementById('email-modal').style.display = 'none';
-  _emailReportId = null;
-}
-
-function sendEmail() {
-  const to = document.getElementById('email-to').value.trim();
-  if (!to) { toast('Bitte Empfänger eintragen'); return; }
-
-  const reports = JSON.parse(localStorage.getItem('wartung-reports') || '[]');
-  const r = reports.find(x => x.id === _emailReportId);
-  if (!r) return;
-  const c = r.cover;
-
-  const subject = `Wartungsprotokoll – ${c.maschinentyp || ''} – ${c.datum || ''}`;
-  const body = MAILTEXT.replace('[techniker]', c.techniker || '');
-
-  // mailto: öffnet die Mail-App des Geräts mit vorausgefüllten Feldern
-  const mailto = `mailto:${encodeURIComponent(to)}?cc=${encodeURIComponent(MAILCC)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-  window.location.href = mailto;
-  closeEmailModal();
-}
 
 function deleteReport(id) {
   let reports = JSON.parse(localStorage.getItem('wartung-reports') || '[]');
