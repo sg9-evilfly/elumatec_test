@@ -1,4 +1,4 @@
-const CACHE = 'wartung-v4';
+const CACHE = 'wartung-v5';
 
 self.addEventListener('install', e => {
   const base = self.registration.scope;
@@ -24,20 +24,25 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  // GitHub config immer live holen, bei Offline gecachte Version
+  // GitHub config: immer Netz versuchen, Offline → Cache
   if (e.request.url.includes('raw.githubusercontent.com')) {
     e.respondWith(
       fetch(e.request).catch(() => caches.match(e.request))
     );
     return;
   }
-  // Alles andere: Cache first, dann Netz, Fallback index.html
+
+  // Navigation (pull-to-refresh, direkte URL): immer index.html aus Cache
+  if (e.request.mode === 'navigate') {
+    e.respondWith(
+      caches.match(self.registration.scope + 'index.html')
+        .then(r => r || fetch(e.request))
+    );
+    return;
+  }
+
+  // Assets: Cache first
   e.respondWith(
-    caches.match(e.request).then(cached => {
-      if (cached) return cached;
-      return fetch(e.request).catch(() =>
-        caches.match(self.registration.scope + 'index.html')
-      );
-    })
+    caches.match(e.request).then(r => r || fetch(e.request))
   );
 });
