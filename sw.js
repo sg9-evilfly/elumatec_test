@@ -1,5 +1,5 @@
 // Cache-Name versioniert — bei Änderung wird der alte Cache automatisch gelöscht
-const CACHE = 'wartung-v6';
+const CACHE = 'wartung-v7';
 
 self.addEventListener('install', e => {
   const base = self.registration.scope; // z.B. https://sg9-evilfly.github.io/elumatec_test/
